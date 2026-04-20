@@ -1,0 +1,146 @@
+:root {
+  color-scheme: light;
+}
+
+.find-current-mark {
+  background-color: rgba(0, 122, 255, 0.3);
+  color: inherit;
+  border-radius: 2px;
+}
+
+html,
+body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.document-shell {
+  min-height: 100vh;
+}
+
+.preview-shell {
+  width: 100%;
+}
+
+.markdown-body {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--viewer-markdown-max-width, 980px);
+  margin: 0 auto;
+  padding: clamp(
+    var(--viewer-markdown-padding-min, 16px),
+    var(--viewer-markdown-padding-fluid, 4vw),
+    var(--viewer-markdown-padding-max, 45px)
+  );
+}
+
+.markdown-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdown-body pre {
+  overflow: auto;
+}
+
+.markdown-body table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow: auto;
+}
+
+.empty-state {
+  padding-top: 16px;
+}
+
+.code-shell {
+  width: 100%;
+}
+
+.source-view {
+  width: 100%;
+  min-height: 100vh;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #1f2328;
+}
+
+.source-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.source-table tr:hover {
+  background: #f6f8fa;
+}
+
+.line-number {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 1%;
+  min-width: 56px;
+  padding: 0 16px;
+  color: #8c959f;
+  text-align: right;
+  vertical-align: top;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+  background: #ffffff;
+  border-right: 1px solid #d8dee4;
+}
+
+.line-number::before {
+  content: attr(data-line-number);
+}
+
+.line-number::selection,
+.line-number *::selection {
+  background: transparent;
+  color: inherit;
+}
+
+.source-table tr:hover .line-number {
+  background: #f6f8fa;
+  color: #7d8590;
+}
+
+.line-content {
+  width: 99%;
+  padding: 0 16px;
+  vertical-align: top;
+}
+
+.line-inner {
+  display: block;
+  min-height: 1.55em;
+  white-space: pre;
+}
+
+.token-heading,
+.token-frontmatter {
+  color: #0550ae;
+  font-weight: 600;
+}
+
+.token-link {
+  color: #0969da;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.token-bullet {
+  color: #bc4c00;
+  font-weight: 600;
+}

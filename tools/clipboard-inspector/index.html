@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clipboard Inspector</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f4ef;
+      --panel: rgba(255, 255, 255, 0.9);
+      --panel-border: rgba(31, 35, 40, 0.12);
+      --text: #1f2328;
+      --muted: #5f6670;
+      --accent: #0f6cbd;
+      --accent-soft: rgba(15, 108, 189, 0.12);
+      --shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      --mono: "SF Mono", "SFMono-Regular", ui-monospace, Menlo, Monaco, monospace;
+      --sans: "SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121417;
+        --panel: rgba(24, 27, 31, 0.94);
+        --panel-border: rgba(255, 255, 255, 0.12);
+        --text: #f4f6f8;
+        --muted: #a3abb7;
+        --accent: #8dc2ff;
+        --accent-soft: rgba(141, 194, 255, 0.14);
+        --shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top left, rgba(15, 108, 189, 0.12), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.08), transparent 28%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    main {
+      width: min(1200px, calc(100vw - 40px));
+      margin: 28px auto 56px;
+    }
+
+    .hero {
+      padding: 8px 4px 18px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(32px, 5vw, 52px);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+
+    .lede {
+      max-width: 820px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.55;
+    }
+
+    .toolbar,
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .toolbar {
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      margin-bottom: 16px;
+    }
+
+    .grid {
+      grid-template-columns: 1.35fr 1fr;
+    }
+
+    @media (max-width: 960px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .card h2,
+    .card h3 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -0.02em;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 18px;
+      align-items: center;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--panel-border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.56));
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font: 600 14px/1 var(--sans);
+      cursor: pointer;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      button {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+      }
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: white;
+      border-color: transparent;
+    }
+
+    .status {
+      margin-left: auto;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .pane {
+      padding: 18px;
+    }
+
+    .pane-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dropzone {
+      min-height: 220px;
+      border: 1.5px dashed var(--panel-border);
+      border-radius: 20px;
+      padding: 20px;
+      background: var(--accent-soft);
+      outline: none;
+      overflow: auto;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    .dropzone:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(15, 108, 189, 0.12);
+    }
+
+    .section-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .metric-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .metric-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(127, 127, 127, 0.08);
+      font-size: 14px;
+    }
+
+    .metric-item code {
+      font: 12px/1.4 var(--mono);
+      color: var(--accent);
+      background: rgba(15, 108, 189, 0.08);
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    textarea,
+    pre,
+    .rendered {
+      width: 100%;
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      background: rgba(127, 127, 127, 0.06);
+      padding: 16px;
+      font-size: 13px;
+    }
+
+    textarea,
+    pre {
+      min-height: 220px;
+      font-family: var(--mono);
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    .rendered {
+      min-height: 220px;
+      overflow: auto;
+      line-height: 1.55;
+    }
+
+    .rendered ul,
+    .rendered ol {
+      padding-left: 1.5em;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>Clipboard Inspector</h1>
+      <p class="lede">
+        Paste from Slack, Chrome, or Leaflet and inspect exactly what the browser sees:
+        clipboard types, raw plain text, raw HTML, and a rendered HTML preview. Use this to compare
+        Slack-to-Slack copy with our app’s clipboard payloads.
+      </p>
+    </section>
+
+    <section class="card toolbar">
+      <div class="controls">
+        <button class="primary" id="readClipboard">Read Clipboard</button>
+        <button id="clearResults">Clear</button>
+        <span class="status" id="status">Waiting for paste or clipboard read.</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card pane">
+        <div class="pane-header">
+          <h2>Paste Zone</h2>
+          <span class="hint">Click here, then paste with <code>Cmd-V</code></span>
+        </div>
+        <div
+          id="pasteZone"
+          class="dropzone"
+          contenteditable="true"
+          spellcheck="false"
+        >Paste here from Slack, Chrome, or Leaflet.</div>
+      </article>
+
+      <article class="card pane">
+        <div class="pane-header">
+          <h2>Clipboard Types</h2>
+          <span class="hint">Order matters. Slack may prefer one flavor over another.</span>
+        </div>
+        <ul id="typeList" class="metric-list">
+          <li class="empty">No clipboard data captured yet.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="grid" style="margin-top: 16px;">
+      <article class="card pane section-stack">
+        <div>
+          <div class="pane-header">
+            <h3>Plain Text</h3>
+            <span class="hint">Raw <code>text/plain</code></span>
+          </div>
+          <textarea id="plainText" spellcheck="false"></textarea>
+        </div>
+
+        <div>
+          <div class="pane-header">
+            <h3>Extra String Types</h3>
+            <span class="hint">Custom MIME / clipboard flavors from paste events and browser clipboard reads</span>
+          </div>
+          <pre id="extraTypes" class="empty">No extra string types captured yet.</pre>
+        </div>
+      </article>
+
+      <article class="card pane section-stack">
+        <div>
+          <div class="pane-header">
+            <h3>HTML Source</h3>
+            <span class="hint">Raw <code>text/html</code></span>
+          </div>
+          <textarea id="htmlText" spellcheck="false"></textarea>
+        </div>
+
+        <div>
+          <div class="pane-header">
+            <h3>Rendered HTML</h3>
+            <span class="hint">How the captured HTML fragment renders in a normal browser</span>
+          </div>
+          <div id="rendered" class="rendered empty">No HTML captured yet.</div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const pasteZone = document.getElementById('pasteZone');
+    const typeList = document.getElementById('typeList');
+    const plainText = document.getElementById('plainText');
+    const htmlText = document.getElementById('htmlText');
+    const rendered = document.getElementById('rendered');
+    const extraTypes = document.getElementById('extraTypes');
+    const STANDARD_TEXT_TYPES = new Set(['text/plain', 'text/html']);
+
+    const STRING_TYPES = new Set([
+      'text/plain',
+      'text/html',
+      'text/rtf',
+      'text/uri-list'
+    ]);
+
+    function setStatus(message) {
+      statusEl.textContent = message;
+    }
+
+    function escapeHTML(value) {
+      return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+    }
+
+    function updateTypes(types, files = []) {
+      if ((!types || types.length === 0) && files.length === 0) {
+        typeList.innerHTML = '<li class="empty">No clipboard data captured yet.</li>';
+        return;
+      }
+
+      const rows = [];
+      for (const type of types) {
+        rows.push(
+          `<li class="metric-item"><span>${escapeHTML(type)}</span><code>string</code></li>`
+        );
+      }
+
+      for (const file of files) {
+        rows.push(
+          `<li class="metric-item"><span>${escapeHTML(file.name)} (${escapeHTML(file.type || 'file')})</span><code>${file.size} bytes</code></li>`
+        );
+      }
+
+      typeList.innerHTML = rows.join('');
+    }
+
+    function updateHTMLPreview(html) {
+      if (!html || !html.trim()) {
+        rendered.classList.add('empty');
+        rendered.textContent = 'No HTML captured yet.';
+        return;
+      }
+
+      rendered.classList.remove('empty');
+      rendered.innerHTML = html;
+    }
+
+    function updateExtraTypes(values) {
+      const entries = Object.entries(values).filter(([, value]) => value && value.trim());
+      if (!entries.length) {
+        extraTypes.className = 'empty';
+        extraTypes.textContent = 'No extra string types captured yet.';
+        return;
+      }
+
+      extraTypes.className = '';
+      extraTypes.textContent = entries
+        .map(([type, value]) => `--- ${type} ---\n${value}`)
+        .join('\n\n');
+    }
+
+    function clearAll() {
+      plainText.value = '';
+      htmlText.value = '';
+      pasteZone.innerHTML = 'Paste here from Slack, Chrome, or Leaflet.';
+      updateTypes([], []);
+      updateHTMLPreview('');
+      updateExtraTypes({});
+      setStatus('Cleared. Waiting for paste or clipboard read.');
+    }
+
+    function captureFromDataTransfer(dataTransfer, sourceLabel) {
+      const types = Array.from(dataTransfer.types || []);
+      const files = Array.from(dataTransfer.files || []);
+      const payloads = {};
+
+      for (const type of types) {
+        try {
+          payloads[type] = dataTransfer.getData(type);
+        } catch (error) {
+          payloads[type] = `[unreadable: ${error}]`;
+        }
+      }
+
+      plainText.value = payloads['text/plain'] || '';
+      htmlText.value = payloads['text/html'] || '';
+      updateHTMLPreview(payloads['text/html'] || '');
+
+      updateExtraTypes(
+        Object.fromEntries(
+          Object.entries(payloads).filter(([type]) => !STANDARD_TEXT_TYPES.has(type))
+        )
+      );
+      updateTypes(types, files);
+      setStatus(`Captured ${types.length} clipboard type(s) from ${sourceLabel}.`);
+    }
+
+    async function captureFromClipboardAPI() {
+      if (!navigator.clipboard?.read) {
+        setStatus('Clipboard read API is not available in this browser/context.');
+        return;
+      }
+
+      try {
+        const items = await navigator.clipboard.read();
+        const mergedTypes = [];
+        const extraPayloads = {};
+        let plain = '';
+        let html = '';
+        const files = [];
+
+        for (const item of items) {
+          for (const type of item.types) {
+            mergedTypes.push(type);
+            const blob = await item.getType(type);
+
+            if (type === 'text/plain') {
+              plain = await blob.text();
+            } else if (type === 'text/html') {
+              html = await blob.text();
+            } else if (
+              type.startsWith('text/') ||
+              type.startsWith('web ') ||
+              type.startsWith('application/') ||
+              type.includes('/')
+            ) {
+              extraPayloads[type] = await blob.text();
+            } else {
+              files.push({ name: type, type, size: blob.size });
+            }
+          }
+        }
+
+        plainText.value = plain;
+        htmlText.value = html;
+        updateHTMLPreview(html);
+        updateExtraTypes(extraPayloads);
+        updateTypes(mergedTypes, files);
+        setStatus(
+          `Read ${mergedTypes.length} clipboard type(s) via Clipboard API. ` +
+          `Browsers often hide custom types here even when paste events expose them.`
+        );
+      } catch (error) {
+        setStatus(`Clipboard read failed: ${error.message}`);
+      }
+    }
+
+    pasteZone.addEventListener('paste', (event) => {
+      if (!event.clipboardData) {
+        setStatus('Paste event fired, but clipboardData was unavailable.');
+        return;
+      }
+
+      captureFromDataTransfer(event.clipboardData, 'paste event');
+    });
+
+    document.getElementById('readClipboard').addEventListener('click', captureFromClipboardAPI);
+    document.getElementById('clearResults').addEventListener('click', clearAll);
+
+    clearAll();
+  </script>
+</body>
+</html>

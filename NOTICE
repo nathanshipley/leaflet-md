@@ -1,0 +1,12 @@
+Leaflet
+Copyright 2026 Nathan Shipley
+
+This product is licensed under the Apache License, Version 2.0.
+
+If you distribute a modified version or fork of this project, please preserve
+this NOTICE file and make it clear to recipients that your version has been
+modified from the original Leaflet project by Nathan Shipley.
+
+This product includes swift-cmark, derived from cmark-gfm / CommonMark work.
+See Package.resolved for the pinned dependency version and the dependency's
+own license notices.

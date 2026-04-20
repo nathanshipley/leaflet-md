@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Tab" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1075.38 1076.01">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #ea876c;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="m725.38,150.99h-5v5.01c0,115,70,200,200.03,200h4.97v-5c0-115-70-200-200-200.01Z"/>
+</svg>
