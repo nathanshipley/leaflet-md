@@ -303,10 +303,9 @@ private struct ActionToolbarButton<Label: View>: View {
 }
 
 private struct SlackToolbarIcon: View {
-    private static let image = Bundle.module.url(
-        forResource: "slack_transparentBG",
-        withExtension: "png"
-    ).flatMap(NSImage.init(contentsOf:))
+    private static let image = ResourceLoader
+        .url(named: "slack_transparentBG", extension: "png")
+        .flatMap(NSImage.init(contentsOf:))
 
     var body: some View {
         Group {
@@ -369,10 +368,9 @@ private struct EmptyPreviewView: View {
 }
 
 private struct LeafletLogo: View {
-    private static let image = Bundle.module.url(
-        forResource: "LeafletLogo",
-        withExtension: "png"
-    ).flatMap(NSImage.init(contentsOf:))
+    private static let image = ResourceLoader
+        .url(named: "LeafletLogo", extension: "png")
+        .flatMap(NSImage.init(contentsOf:))
 
     var body: some View {
         Group {
