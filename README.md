@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon/Logo_Horizontal_v3.png" alt="Leaflet">
+  <img src="icon/Logo_Horizontal_v3.png" alt="Leaflet" width="490">
 </p>
 
 **A simple Markdown reader with pretty Slack pasting.**
