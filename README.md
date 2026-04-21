@@ -36,6 +36,18 @@ To open the beta:
 
 That warning is expected for this early build. Developer ID signing, notarization, and App Store packaging are intentionally deferred.
 
+### Tahoe note
+
+On macOS Tahoe, this unsigned beta may say **"Leaflet is damaged and can't be opened"** instead of showing the usual Open Anyway flow. If that happens, run:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Leaflet.app
+```
+
+Then open Leaflet again.
+
+This removes the browser download quarantine flag from the app. A future notarized build should not require this.
+
 ## What Leaflet does
 
 - Opens Markdown and plain text files in native Mac document windows
@@ -58,7 +70,7 @@ The signature feature is **Copy for Slack**. It writes Slack's rich clipboard fo
 
 - Apple Silicon only for this beta
 - macOS 13+
-- Not notarized yet, so macOS may show a first-launch warning
+- Not notarized yet, so macOS may show a first-launch warning or require the Tahoe workaround above
 - Opened files are read-only by design
 - Slack paste depends on Slack's current clipboard behavior
 
