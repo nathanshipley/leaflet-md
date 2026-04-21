@@ -39,9 +39,6 @@ Install:
 2. Open it.
 3. If macOS blocks the app because it is from an unidentified developer,
    Control-click Leaflet.app, choose Open, then choose Open again.
-4. On Tahoe, if macOS says Leaflet is damaged and does not show Open Anyway,
-   run this in Terminal after moving the app to Applications:
-   xattr -dr com.apple.quarantine /Applications/Leaflet.app
 
 Please test:
 - opening Markdown files
