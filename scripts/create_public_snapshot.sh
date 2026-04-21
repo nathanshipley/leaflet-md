@@ -54,9 +54,7 @@ copy_item "docs/THIRD_PARTY_NOTICES.md"
 mkdir -p "$DEST/icon"
 copy_item "icon/IconCompose_02.icon"
 copy_item "icon/IconCompose_02-macOS-Default-1024x1024@1x.png"
-copy_item "icon/Leaflet_AppIcon_44.png"
 copy_item "icon/Logo_Horizontal_v3.png"
-copy_item "icon/Leaflet_ReadmeLogo_320.png"
 
 find "$DEST" -name ".DS_Store" -delete
 
