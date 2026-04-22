@@ -64,11 +64,12 @@ The signature feature is **Copy for Slack**. It writes Slack's rich clipboard fo
 
 ## Development
 
+Open `Leaflet.xcodeproj` in Xcode and press Run to build and launch the app. Requires Xcode 26 or newer on macOS 15+.
+
+Unit tests run from the command line:
+
 ```bash
 swift test
-./scripts/package_app.sh
-./scripts/build_release_zip.sh
-./scripts/create_public_snapshot.sh
 ```
 
 The public product name is Leaflet. Some internal Swift package, module, and folder names still use `MarkdownViewer` for now.

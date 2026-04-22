@@ -21,9 +21,10 @@ Sources/MarkdownViewer/Resources/Fonts/GeistSansVariable.ttf
 Sources/MarkdownViewer/Resources/Fonts/GeistSansVariable-Italic.ttf
 Sources/MarkdownViewer/Resources/Fonts/PublicSansVariable.ttf
 Sources/MarkdownViewer/Resources/Fonts/PublicSansVariable-Italic.ttf
-/*.xcodeproj
 xcuserdata/
 DerivedData/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
 .swiftpm/config/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc

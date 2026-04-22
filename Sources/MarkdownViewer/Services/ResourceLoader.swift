@@ -70,8 +70,15 @@ enum ResourceLoader {
                 .appendingPathComponent(resourceBundleName, isDirectory: true)
         ].compactMap { $0 }
 
-        if let packagedBundle = bundleCandidates.first(where: { fileManager.fileExists(atPath: $0.path) }) {
-            return packagedBundle
+        if let packagedBundleURL = bundleCandidates.first(where: { fileManager.fileExists(atPath: $0.path) }) {
+            // Two bundle layouts need to work here:
+            //   * SwiftPM CLI build  -> shallow bundle: files sit at <bundle>/foo.css
+            //   * Xcode SPM integration -> non-shallow bundle: files sit at <bundle>/Contents/Resources/foo.css
+            // Bundle(url:).resourceURL resolves to the right subpath in both cases.
+            if let loaded = Bundle(url: packagedBundleURL), let resourceURL = loaded.resourceURL {
+                return resourceURL
+            }
+            return packagedBundleURL
         }
 
         return URL(fileURLWithPath: #filePath)

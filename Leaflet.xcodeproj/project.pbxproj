@@ -1,0 +1,303 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AAAAAAAAAAAAAAAAAAAA0010 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA000C /* main.swift */; };
+		AAAAAAAAAAAAAAAAAAAA0011 /* Assets.car in Resources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA000E /* Assets.car */; };
+		AAAAAAAAAAAAAAAAAAAA0012 /* MarkdownViewerCore in Frameworks */ = {isa = PBXBuildFile; productRef = AAAAAAAAAAAAAAAAAAAA0017 /* MarkdownViewerCore */; };
+		AAAAAAAAAAAAAAAAAAAA0021 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = AAAAAAAAAAAAAAAAAAAA0020 /* AppIcon.icns */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AAAAAAAAAAAAAAAAAAAA000C /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA000D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA000E /* Assets.car */ = {isa = PBXFileReference; lastKnownFileType = archive.car; path = Assets.car; sourceTree = "<group>"; };
+		AAAAAAAAAAAAAAAAAAAA000F /* Leaflet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Leaflet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AAAAAAAAAAAAAAAAAAAA0020 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AAAAAAAAAAAAAAAAAAAA0015 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAAAAAAAAAAAAAAAAAAA0012 /* MarkdownViewerCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AAAAAAAAAAAAAAAAAAAA0003 = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAAAAAAAAAAAAAAA0004 /* Leaflet */,
+				AAAAAAAAAAAAAAAAAAAA0005 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AAAAAAAAAAAAAAAAAAAA0004 /* Leaflet */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAAAAAAAAAAAAAAA000C /* main.swift */,
+				AAAAAAAAAAAAAAAAAAAA000D /* Info.plist */,
+				AAAAAAAAAAAAAAAAAAAA000E /* Assets.car */,
+				AAAAAAAAAAAAAAAAAAAA0020 /* AppIcon.icns */,
+			);
+			path = Leaflet;
+			sourceTree = "<group>";
+		};
+		AAAAAAAAAAAAAAAAAAAA0005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AAAAAAAAAAAAAAAAAAAA000F /* Leaflet.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AAAAAAAAAAAAAAAAAAAA0002 /* Leaflet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AAAAAAAAAAAAAAAAAAAA0009 /* Build configuration list for PBXNativeTarget "Leaflet" */;
+			buildPhases = (
+				AAAAAAAAAAAAAAAAAAAA0013 /* Sources */,
+				AAAAAAAAAAAAAAAAAAAA0014 /* Resources */,
+				AAAAAAAAAAAAAAAAAAAA0015 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Leaflet;
+			packageProductDependencies = (
+				AAAAAAAAAAAAAAAAAAAA0017 /* MarkdownViewerCore */,
+			);
+			productName = Leaflet;
+			productReference = AAAAAAAAAAAAAAAAAAAA000F /* Leaflet.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AAAAAAAAAAAAAAAAAAAA0001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2630;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					AAAAAAAAAAAAAAAAAAAA0002 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+				};
+			};
+			buildConfigurationList = AAAAAAAAAAAAAAAAAAAA0006 /* Build configuration list for PBXProject "Leaflet" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AAAAAAAAAAAAAAAAAAAA0003;
+			packageReferences = (
+				AAAAAAAAAAAAAAAAAAAA0016 /* XCLocalSwiftPackageReference "." */,
+			);
+			productRefGroup = AAAAAAAAAAAAAAAAAAAA0005 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AAAAAAAAAAAAAAAAAAAA0002 /* Leaflet */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AAAAAAAAAAAAAAAAAAAA0014 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAAAAAAAAAAAAAAAAAAA0011 /* Assets.car in Resources */,
+				AAAAAAAAAAAAAAAAAAAA0021 /* AppIcon.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AAAAAAAAAAAAAAAAAAAA0013 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAAAAAAAAAAAAAAAAAAA0010 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AAAAAAAAAAAAAAAAAAAA0007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AAAAAAAAAAAAAAAAAAAA0008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				ONLY_ACTIVE_ARCH = NO;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		AAAAAAAAAAAAAAAAAAAA000A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Leaflet/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nathanshipley.leaflet;
+				PRODUCT_NAME = Leaflet;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug;
+		};
+		AAAAAAAAAAAAAAAAAAAA000B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Leaflet/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nathanshipley.leaflet;
+				PRODUCT_NAME = Leaflet;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AAAAAAAAAAAAAAAAAAAA0006 /* Build configuration list for PBXProject "Leaflet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAAAAAAAAAAAAAAAAAAA0007 /* Debug */,
+				AAAAAAAAAAAAAAAAAAAA0008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AAAAAAAAAAAAAAAAAAAA0009 /* Build configuration list for PBXNativeTarget "Leaflet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAAAAAAAAAAAAAAAAAAA000A /* Debug */,
+				AAAAAAAAAAAAAAAAAAAA000B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		AAAAAAAAAAAAAAAAAAAA0016 /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AAAAAAAAAAAAAAAAAAAA0017 /* MarkdownViewerCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MarkdownViewerCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+
+	};
+	rootObject = AAAAAAAAAAAAAAAAAAAA0001 /* Project object */;
+}
