@@ -50,6 +50,13 @@ class ViewerDocument: NSDocument {
         ]
     }
 
+    // Leaflet presents opened files as read-only and only supports an explicit
+    // Save for clipboard-seeded documents. Autosave-in-place would write back
+    // to opened files on its own schedule, which is not what we want.
+    override class var autosavesInPlace: Bool {
+        false
+    }
+
     override func data(ofType typeName: String) throws -> Data {
         Data(text.utf8)
     }

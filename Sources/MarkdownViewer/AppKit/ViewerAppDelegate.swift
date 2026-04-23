@@ -28,6 +28,10 @@ public final class ViewerAppDelegate: NSObject, NSApplicationDelegate, NSMenuDel
         observePreferencesForMenu()
     }
 
+    public func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
+        true
+    }
+
     public func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let hasSubstantiveDocuments = NSDocumentController.shared.documents.contains { doc in
             guard let viewerDoc = doc as? ViewerDocument else { return false }
