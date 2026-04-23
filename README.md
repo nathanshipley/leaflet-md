@@ -13,16 +13,16 @@ It is intentionally **not** a Markdown editor. Think TextEdit or Preview for Mar
 <table>
   <tr>
     <td width="64">
-      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.2/Leaflet-v0.1.0-beta.2-macOS-arm64.zip">
+      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.3/Leaflet-v0.1.0-beta.3-macOS-universal.zip">
         <img src="icon/IconCompose_02-macOS-Default-1024x1024@1x.png" alt="Leaflet app icon" width="52">
       </a>
     </td>
     <td>
-      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.2/Leaflet-v0.1.0-beta.2-macOS-arm64.zip">
-        <strong>Download Leaflet v0.1.0-beta.2 for macOS</strong>
+      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.3/Leaflet-v0.1.0-beta.3-macOS-universal.zip">
+        <strong>Download Leaflet v0.1.0-beta.3 for macOS</strong>
       </a>
       <br>
-      Apple Silicon Macs, macOS 13+, unsigned friend-testing beta.
+      Apple Silicon and Intel Macs, macOS 13+, unsigned friend-testing beta.
     </td>
   </tr>
 </table>
@@ -56,8 +56,7 @@ The signature feature is **Copy for Slack**. It writes Slack's rich clipboard fo
 
 ## Known limitations
 
-- Apple Silicon only for this beta
-- macOS 13+
+- macOS 13+, Apple Silicon and Intel (universal binary)
 - Not notarized yet, so macOS may show a first-launch warning
 - Opened files are read-only by design
 - Slack paste depends on Slack's current clipboard behavior
