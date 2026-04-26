@@ -131,13 +131,9 @@ final class MarkdownDocumentController: ObservableObject {
         renderTask = Task { [weak self] in
             guard let self else { return }
 
-            let repositoryContext = await GitHubRepositoryContextResolver.resolve(for: fileURL)
-            if Task.isCancelled { return }
-
             let title = fileURL?.lastPathComponent ?? self.suggestedBaseName
             let context = RenderContext(
                 baseURL: fileURL?.deletingLastPathComponent(),
-                repoContext: repositoryContext,
                 purpose: .preview,
                 title: title
             )

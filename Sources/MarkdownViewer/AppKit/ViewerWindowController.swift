@@ -111,8 +111,9 @@ final class ViewerWindowController: NSWindowController {
         window.tabbingMode = .preferred
 
         do {
-            let newDocument = try NSDocumentController.shared
-                .openUntitledDocumentAndDisplay(false) as! ViewerDocument
+            let openedDocument = try NSDocumentController.shared
+                .openUntitledDocumentAndDisplay(false)
+            guard let newDocument = openedDocument as? ViewerDocument else { return }
             newDocument.makeWindowControllers()
             guard let newWC = newDocument.windowControllers.first as? ViewerWindowController,
                   let newWindow = newWC.window else { return }

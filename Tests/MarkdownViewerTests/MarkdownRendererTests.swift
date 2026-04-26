@@ -12,7 +12,7 @@ final class MarkdownRendererTests: XCTestCase {
         let rendered = await renderer.render(
             markdown: "# Hello",
             displayMode: .preview,
-            context: RenderContext(baseURL: nil, repoContext: nil, purpose: .preview, title: "README"),
+            context: RenderContext(baseURL: nil, purpose: .preview, title: "README"),
             preferences: .standard
         )
 
@@ -31,7 +31,7 @@ final class MarkdownRendererTests: XCTestCase {
         let rendered = await renderer.render(
             markdown: "   \n",
             displayMode: .preview,
-            context: RenderContext(baseURL: nil, repoContext: nil, purpose: .preview, title: "README"),
+            context: RenderContext(baseURL: nil, purpose: .preview, title: "README"),
             preferences: .standard
         )
 
@@ -48,7 +48,7 @@ final class MarkdownRendererTests: XCTestCase {
         let rendered = await renderer.render(
             markdown: "# Heading\n[link](https://example.com)\n",
             displayMode: .code,
-            context: RenderContext(baseURL: nil, repoContext: nil, purpose: .preview, title: "README"),
+            context: RenderContext(baseURL: nil, purpose: .preview, title: "README"),
             preferences: .standard
         )
 

@@ -7,7 +7,6 @@ struct RenderContext: Equatable, Sendable {
     }
 
     let baseURL: URL?
-    let repoContext: GitHubRepositoryContext?
     let purpose: Purpose
     let title: String
 }
