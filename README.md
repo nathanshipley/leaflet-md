@@ -13,13 +13,13 @@ It is intentionally **not** a Markdown editor. Think TextEdit or Preview for Mar
 <table>
   <tr>
     <td width="64">
-      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.5/Leaflet-v0.1.0-beta.5-macOS-universal.zip">
+      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.6/Leaflet-v0.1.0-beta.6-macOS-universal.dmg">
         <img src="icon/IconCompose_02-macOS-Default-1024x1024@1x.png" alt="Leaflet app icon" width="52">
       </a>
     </td>
     <td>
-      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.5/Leaflet-v0.1.0-beta.5-macOS-universal.zip">
-        <strong>Download Leaflet v0.1.0-beta.5 for macOS</strong>
+      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.6/Leaflet-v0.1.0-beta.6-macOS-universal.dmg">
+        <strong>Download Leaflet v0.1.0-beta.6 for macOS</strong>
       </a>
       <br>
       Apple Silicon and Intel Macs, macOS 13+, signed and notarized.
@@ -29,9 +29,9 @@ It is intentionally **not** a Markdown editor. Think TextEdit or Preview for Mar
 
 To open the beta:
 
-1. Download and unzip the release.
-2. Move `Leaflet.app` to Applications.
-3. Open the app.
+1. Download and double-click `Leaflet-v0.1.0-beta.6-macOS-universal.dmg`.
+2. Drag `Leaflet.app` into the Applications shortcut.
+3. Eject the disk image and open Leaflet from Applications.
 
 The build is signed with a Developer ID certificate and notarized by Apple, so Gatekeeper should open it without any warning. App Store packaging is still deferred.
 
