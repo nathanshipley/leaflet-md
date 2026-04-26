@@ -13,13 +13,13 @@ It is intentionally **not** a Markdown editor. Think TextEdit or Preview for Mar
 <table>
   <tr>
     <td width="64">
-      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.4/Leaflet-v0.1.0-beta.4-macOS-universal.zip">
+      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.5/Leaflet-v0.1.0-beta.5-macOS-universal.zip">
         <img src="icon/IconCompose_02-macOS-Default-1024x1024@1x.png" alt="Leaflet app icon" width="52">
       </a>
     </td>
     <td>
-      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.4/Leaflet-v0.1.0-beta.4-macOS-universal.zip">
-        <strong>Download Leaflet v0.1.0-beta.4 for macOS</strong>
+      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.5/Leaflet-v0.1.0-beta.5-macOS-universal.zip">
+        <strong>Download Leaflet v0.1.0-beta.5 for macOS</strong>
       </a>
       <br>
       Apple Silicon and Intel Macs, macOS 13+, signed and notarized.
