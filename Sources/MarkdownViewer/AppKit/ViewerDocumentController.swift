@@ -75,8 +75,11 @@ final class ViewerDocumentController: NSDocumentController {
         }
 
         // If we have a blank untitled document, load the file into it in-place
-        // so it keeps its tab position instead of appearing at the end.
-        if let blankDocument = findReusableBlankDocument() {
+        // so it keeps its tab position instead of appearing at the end. Only
+        // do this when the user has chosen "tab" as the document open mode;
+        // in "window" mode they explicitly want a new window every time.
+        if ViewerAppDelegate.shared.preferences.documentOpenMode == .tab,
+           let blankDocument = findReusableBlankDocument() {
             do {
                 let data = try Data(contentsOf: url)
                 try blankDocument.read(from: data, ofType: UTType.markdownSource.identifier)
