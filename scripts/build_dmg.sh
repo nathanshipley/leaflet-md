@@ -51,14 +51,17 @@ xcrun stapler validate "$APP_PATH"
 mkdir -p "$RELEASE_DIR"
 
 STAGE_DIR="$(mktemp -d -t leaflet-dmg-stage)"
-trap 'rm -rf "$STAGE_DIR"' EXIT
+BUILD_DIR="$(mktemp -d -t leaflet-dmg-build)"
+trap 'rm -rf "$STAGE_DIR" "$BUILD_DIR"' EXIT
 
 echo "==> staging $APP_PATH"
 cp -R "$APP_PATH" "$STAGE_DIR/Leaflet.app"
 ln -s /Applications "$STAGE_DIR/Applications"
 
 DMG_PATH="$RELEASE_DIR/$DMG_NAME"
-TMP_DMG="$STAGE_DIR/build.dmg"
+# Important: keep the temp dmg OUTSIDE the stage dir, otherwise hdiutil
+# snapshots its own in-progress output back into the final image.
+TMP_DMG="$BUILD_DIR/build.dmg"
 
 # Remove any prior artifact so hdiutil doesn't refuse.
 rm -f "$DMG_PATH"
