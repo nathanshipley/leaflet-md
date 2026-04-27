@@ -74,12 +74,14 @@ final class ViewerDocumentController: NSDocumentController {
             return
         }
 
-        // If we have a blank untitled document, load the file into it in-place
-        // so it keeps its tab position instead of appearing at the end. Only
-        // do this when the user has chosen "tab" as the document open mode;
-        // in "window" mode they explicitly want a new window every time.
-        if ViewerAppDelegate.shared.preferences.documentOpenMode == .tab,
-           let blankDocument = findReusableBlankDocument() {
+        // If the currently-focused document is a blank untitled doc, load
+        // the file into it so the empty window/tab the user is staring at
+        // becomes the file's home. This runs regardless of the
+        // tab-vs-window preference: reusing a focused blank never surprises
+        // anyone because they can see the empty doc disappear. The
+        // preference only controls what happens when there's NOT a focused
+        // blank to reuse.
+        if let blankDocument = findReusableBlankDocument() {
             do {
                 let data = try Data(contentsOf: url)
                 try blankDocument.read(from: data, ofType: UTType.markdownSource.identifier)
@@ -140,23 +142,18 @@ final class ViewerDocumentController: NSDocumentController {
     }
 
     private func findReusableBlankDocument() -> ViewerDocument? {
-        // Prefer the currently active document so files load into the tab
-        // the user is looking at, preserving tab order.
-        if let current = currentDocument as? ViewerDocument,
-           current.fileURL == nil,
-           current.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return current
+        // Only the currently-focused document is "reusable." We deliberately
+        // do NOT scan every open document for a blank one to fill: hijacking
+        // a buried blank tab in some other window surprises the user, who
+        // doesn't see where the file landed. Keep the rule simple — if the
+        // doc you're looking at is empty and untitled, it's fair game;
+        // otherwise leave existing windows alone.
+        guard let current = currentDocument as? ViewerDocument,
+              current.fileURL == nil,
+              current.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
         }
-
-        for document in documents {
-            guard let viewerDoc = document as? ViewerDocument,
-                  viewerDoc.fileURL == nil,
-                  viewerDoc.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                continue
-            }
-            return viewerDoc
-        }
-        return nil
+        return current
     }
 
     private static func bounceWindow(_ window: NSWindow) {
