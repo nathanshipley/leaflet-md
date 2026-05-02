@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>Leaflet</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -22,16 +24,14 @@
 			<string>ViewerDocument</string>
 		</dict>
 	</array>
-	<key>CFBundleDisplayName</key>
-	<string>Leaflet</string>
 	<key>CFBundleExecutable</key>
 	<string>Leaflet</string>
-	<key>CFBundleIdentifier</key>
-	<string>com.nathanshipley.leaflet</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.nathanshipley.leaflet</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -39,7 +39,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.0</string>
+	<string>0.1.0-beta.8</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSMinimumSystemVersion</key>
