@@ -8,7 +8,11 @@ public final class MarkdownViewerPreferences: ObservableObject {
         static let marginPreset = "markdownViewer.preview.marginPreset"
         static let fontPreset = "markdownViewer.preview.fontPreset"
         static let allowWideContent = "markdownViewer.preview.allowWideContent"
-        static let flattenSlackTables = "markdownViewer.slack.flattenTables"
+        static let wrapCodeViewLines = "markdownViewer.codeView.wrapLines"
+        static let slackTableMode = "markdownViewer.slack.tableMode"
+        // Legacy key from beta.7 and earlier — read once on init to
+        // migrate the Bool toggle into the new three-way preference.
+        static let flattenSlackTablesLegacy = "markdownViewer.slack.flattenTables"
         static let warnOnQuit = "markdownViewer.app.warnOnQuit"
     }
 
@@ -36,9 +40,15 @@ public final class MarkdownViewerPreferences: ObservableObject {
         }
     }
 
-    @Published var flattenSlackTables: Bool {
+    @Published var wrapCodeViewLines: Bool {
         didSet {
-            UserDefaults.standard.set(flattenSlackTables, forKey: Keys.flattenSlackTables)
+            UserDefaults.standard.set(wrapCodeViewLines, forKey: Keys.wrapCodeViewLines)
+        }
+    }
+
+    @Published var slackTableMode: SlackTableRenderingMode {
+        didSet {
+            UserDefaults.standard.set(slackTableMode.rawValue, forKey: Keys.slackTableMode)
         }
     }
 
@@ -48,15 +58,12 @@ public final class MarkdownViewerPreferences: ObservableObject {
         }
     }
 
-    var slackTableMode: SlackTableRenderingMode {
-        flattenSlackTables ? .readableRows : .codeBlock
-    }
-
     var renderingPreferences: PreviewRenderingPreferences {
         PreviewRenderingPreferences(
             marginPreset: marginPreset,
             fontPreset: fontPreset,
-            allowWideContent: allowWideContent
+            allowWideContent: allowWideContent,
+            wrapCodeViewLines: wrapCodeViewLines
         )
     }
 
@@ -65,7 +72,23 @@ public final class MarkdownViewerPreferences: ObservableObject {
         marginPreset = PreviewMarginPreset(rawValue: defaults.string(forKey: Keys.marginPreset) ?? "") ?? .normal
         fontPreset = PreviewFontPreset(rawValue: defaults.string(forKey: Keys.fontPreset) ?? "") ?? .github
         allowWideContent = defaults.object(forKey: Keys.allowWideContent) as? Bool ?? false
-        flattenSlackTables = defaults.object(forKey: Keys.flattenSlackTables) as? Bool ?? false
+        wrapCodeViewLines = defaults.object(forKey: Keys.wrapCodeViewLines) as? Bool ?? false
+        slackTableMode = Self.resolveSlackTableMode(defaults: defaults)
         warnOnQuit = defaults.object(forKey: Keys.warnOnQuit) as? Bool ?? true
+    }
+
+    /// Resolve the user's Slack table preference, migrating the older
+    /// Bool toggle (`flattenSlackTables`) into the new three-way enum the
+    /// first time we see it. Existing testers who had the toggle on map
+    /// to `.flattenAll`; everyone else gets the new `.wrap` default.
+    private static func resolveSlackTableMode(defaults: UserDefaults) -> SlackTableRenderingMode {
+        if let stored = defaults.string(forKey: Keys.slackTableMode),
+           let mode = SlackTableRenderingMode(rawValue: stored) {
+            return mode
+        }
+        if defaults.object(forKey: Keys.flattenSlackTablesLegacy) != nil {
+            return defaults.bool(forKey: Keys.flattenSlackTablesLegacy) ? .flattenAll : .wrap
+        }
+        return .wrap
     }
 }

@@ -45,6 +45,15 @@ The build is signed with a Developer ID certificate and notarized by Apple, so G
 
 The signature feature is **Copy for Slack**. It writes Slack's rich clipboard format so pastes can preserve structure in both Slack desktop and Slack in Chrome.
 
+### Two ways people are using it
+
+- **Pasting LLM responses into Slack.** Copy a ChatGPT or Claude reply, drop it into a Leaflet window with `New from Clipboard`, and `Copy for Slack` — bullets, code blocks, headings, and tables come through cleanly.
+- **Bridging Workflowy → Slack.** Workflowy's own copy-for-Slack drops formatting whenever a list item also contains styled text. Pasting through Leaflet preserves both the list structure and the inline formatting in one go.
+
+### A note on default-app behavior
+
+Because no system app on macOS claims `.md` by default, Leaflet may become the default Markdown viewer the first time you install it — that's macOS picking the only registered handler, not Leaflet asking for it. To change it: in Finder, select any `.md` file → File → Get Info → Open With → choose another app → **Change All**.
+
 ## What To Test (if you have a sec!)
 
 - Open a Markdown file and switch between Preview and Code

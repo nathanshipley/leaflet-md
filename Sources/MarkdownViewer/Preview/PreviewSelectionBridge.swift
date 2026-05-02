@@ -524,7 +524,7 @@ final class PreviewSelectionBridge: NSObject {
     }
 
     func slackHTMLFragment(selectionOnly: Bool) async -> String? {
-        return await slackHTMLFragment(selectionOnly: selectionOnly, tableMode: .codeBlock)
+        return await slackHTMLFragment(selectionOnly: selectionOnly, tableMode: .wrap)
     }
 
     func slackSelectionSnapshot(
@@ -536,7 +536,7 @@ final class PreviewSelectionBridge: NSObject {
 
         let script = """
         return (() => {
-          const tableMode = "\(tableMode == .codeBlock ? "codeBlock" : "readableRows")";
+          const tableMode = "\(tableMode.rawValue)";
           const cachedTextKey = '__markdownViewerCachedSelectionText';
           const cachedHTMLKey = '__markdownViewerCachedSelectionHTML';
 
@@ -557,6 +557,48 @@ final class PreviewSelectionBridge: NSObject {
 
           function separatorText() {
             return '────────────────────';
+          }
+
+          // Mirror the Swift exporter:
+          //   * tableWideThreshold = 120 (line-width above which a table
+          //     is "wide" enough to either wrap or flatten)
+          //   * tableWrapColumnWidth = 60 (per-column cap when wrapping)
+          function naturalCodeBlockLineWidth(rows) {
+            if (rows.length === 0 || rows[0].length === 0) return 0;
+            const widths = rows[0].map((_, c) =>
+              Math.max(...rows.map((row) => (row[c] || '').length), 0)
+            );
+            return 4 + widths.reduce((a, b) => a + b, 0) + Math.max(0, 3 * (widths.length - 1));
+          }
+
+          function wrapCellText(text, width) {
+            if (width <= 0) return [text];
+            if (text.length <= width) return [text];
+            const lines = [];
+            let current = '';
+            for (const word of text.split(' ')) {
+              if (!word) continue;
+              if (word.length > width) {
+                if (current) { lines.push(current); current = ''; }
+                let remaining = word;
+                while (remaining.length > width) {
+                  lines.push(remaining.slice(0, width));
+                  remaining = remaining.slice(width);
+                }
+                current = remaining;
+                continue;
+              }
+              if (!current) {
+                current = word;
+              } else if (current.length + 1 + word.length <= width) {
+                current += ' ' + word;
+              } else {
+                lines.push(current);
+                current = word;
+              }
+            }
+            if (current) lines.push(current);
+            return lines.length === 0 ? [''] : lines;
           }
 
           function tableToRows(table) {
@@ -586,10 +628,7 @@ final class PreviewSelectionBridge: NSObject {
                 if (index > 0) {
                   row.appendChild(document.createElement('br'));
                 }
-
-                const label = document.createElement('strong');
-                label.textContent = `${header}: `;
-                row.appendChild(label);
+                row.appendChild(document.createTextNode(`${header}: `));
                 row.appendChild(document.createTextNode(values[index] || ''));
               });
 
@@ -608,6 +647,72 @@ final class PreviewSelectionBridge: NSObject {
             }
 
             return container;
+          }
+
+          function tableToCodeBlockText(table, { wrap }) {
+            const rows = Array.from(table.querySelectorAll('tr')).map((row) =>
+              Array.from(row.children).map((cell) => normalizeText(cell.textContent))
+            );
+            if (rows.length < 2) return normalizeText(table.innerText);
+
+            const headerCells = rows[0];
+            const valueRows = rows.slice(1);
+
+            const naturalWidths = headerCells.map((_, c) =>
+              Math.max(headerCells[c].length, ...valueRows.map((row) => (row[c] || '').length))
+            );
+            const naturalLine = 4 + naturalWidths.reduce((a, b) => a + b, 0) + Math.max(0, 3 * (naturalWidths.length - 1));
+
+            const shouldWrap = wrap && naturalLine > 120;
+            const widths = shouldWrap
+              ? naturalWidths.map((w) => Math.min(w, 60))
+              : naturalWidths;
+
+            const padCell = (text, width) => (text || '').padEnd(width, ' ');
+            const formatLine = (cells) =>
+              `| ${cells.map((cell, i) => padCell(cell, widths[i])).join(' | ')} |`;
+
+            const expandRow = (row) => {
+              const wrapped = widths.map((w, c) => wrapCellText(row[c] || '', w));
+              const lineCount = Math.max(...wrapped.map((cell) => cell.length));
+              const lines = [];
+              for (let i = 0; i < lineCount; i++) {
+                const cells = wrapped.map((cell) => i < cell.length ? cell[i] : '');
+                lines.push(formatLine(cells));
+              }
+              return lines;
+            };
+
+            const headerLines = expandRow(headerCells);
+            const separatorLine = `| ${widths.map((width) => '-'.repeat(Math.max(width, 3))).join(' | ')} |`;
+            const bodyLines = valueRows.flatMap(expandRow);
+
+            return [...headerLines, separatorLine, ...bodyLines].join('\\n');
+          }
+
+          function pickTableRendering(table) {
+            // Mirror the Swift exporter's resolveLayout. .flattenAll
+            // always flattens; .flattenWide flattens only when the table
+            // is wider than the threshold; .wrap always uses code-block
+            // layout (with cell wrapping if wide).
+            if (tableMode === 'flattenAll') {
+              return tableToRows(table);
+            }
+            if (tableMode === 'flattenWide') {
+              const rows = Array.from(table.querySelectorAll('tr')).map((row) =>
+                Array.from(row.children).map((cell) => normalizeText(cell.textContent))
+              );
+              if (naturalCodeBlockLineWidth(rows) > 120) {
+                return tableToRows(table);
+              }
+              return tableToCodeBlock(table);
+            }
+            // .wrap (default): use the wrapping code-block renderer.
+            const pre = document.createElement('pre');
+            const code = document.createElement('code');
+            code.textContent = tableToCodeBlockText(table, { wrap: true });
+            pre.appendChild(code);
+            return pre;
           }
 
           function pad(value, width) {
@@ -722,11 +827,7 @@ final class PreviewSelectionBridge: NSObject {
             });
 
             container.querySelectorAll('table').forEach((table) => {
-              table.replaceWith(
-                tableMode === 'codeBlock'
-                  ? tableToCodeBlock(table)
-                  : tableToRows(table)
-              );
+              table.replaceWith(pickTableRendering(table));
             });
 
             convertHeadings(container);
@@ -1149,7 +1250,7 @@ final class PreviewSelectionBridge: NSObject {
         let script = """
         return (() => {
           const selectionOnly = \(selectionOnly ? "true" : "false");
-          const tableMode = "\(tableMode == .codeBlock ? "codeBlock" : "readableRows")";
+          const tableMode = "\(tableMode.rawValue)";
           const cachedHTMLKey = '__markdownViewerCachedSelectionHTML';
 
           function makeSpacer() {
@@ -1165,6 +1266,48 @@ final class PreviewSelectionBridge: NSObject {
 
           function normalizeText(value) {
             return (value || '').replace(/\\s+/g, ' ').trim();
+          }
+
+          // Mirror the Swift exporter:
+          //   * tableWideThreshold = 120 (line-width above which a table
+          //     is "wide" enough to either wrap or flatten)
+          //   * tableWrapColumnWidth = 60 (per-column cap when wrapping)
+          function naturalCodeBlockLineWidth(rows) {
+            if (rows.length === 0 || rows[0].length === 0) return 0;
+            const widths = rows[0].map((_, c) =>
+              Math.max(...rows.map((row) => (row[c] || '').length), 0)
+            );
+            return 4 + widths.reduce((a, b) => a + b, 0) + Math.max(0, 3 * (widths.length - 1));
+          }
+
+          function wrapCellText(text, width) {
+            if (width <= 0) return [text];
+            if (text.length <= width) return [text];
+            const lines = [];
+            let current = '';
+            for (const word of text.split(' ')) {
+              if (!word) continue;
+              if (word.length > width) {
+                if (current) { lines.push(current); current = ''; }
+                let remaining = word;
+                while (remaining.length > width) {
+                  lines.push(remaining.slice(0, width));
+                  remaining = remaining.slice(width);
+                }
+                current = remaining;
+                continue;
+              }
+              if (!current) {
+                current = word;
+              } else if (current.length + 1 + word.length <= width) {
+                current += ' ' + word;
+              } else {
+                lines.push(current);
+                current = word;
+              }
+            }
+            if (current) lines.push(current);
+            return lines.length === 0 ? [''] : lines;
           }
 
           function tableToRows(table) {
@@ -1194,10 +1337,7 @@ final class PreviewSelectionBridge: NSObject {
                 if (index > 0) {
                   row.appendChild(document.createElement('br'));
                 }
-
-                const label = document.createElement('strong');
-                label.textContent = `${header}: `;
-                row.appendChild(label);
+                row.appendChild(document.createTextNode(`${header}: `));
                 row.appendChild(document.createTextNode(values[index] || ''));
               });
 
@@ -1216,6 +1356,72 @@ final class PreviewSelectionBridge: NSObject {
             }
 
             return container;
+          }
+
+          function tableToCodeBlockText(table, { wrap }) {
+            const rows = Array.from(table.querySelectorAll('tr')).map((row) =>
+              Array.from(row.children).map((cell) => normalizeText(cell.textContent))
+            );
+            if (rows.length < 2) return normalizeText(table.innerText);
+
+            const headerCells = rows[0];
+            const valueRows = rows.slice(1);
+
+            const naturalWidths = headerCells.map((_, c) =>
+              Math.max(headerCells[c].length, ...valueRows.map((row) => (row[c] || '').length))
+            );
+            const naturalLine = 4 + naturalWidths.reduce((a, b) => a + b, 0) + Math.max(0, 3 * (naturalWidths.length - 1));
+
+            const shouldWrap = wrap && naturalLine > 120;
+            const widths = shouldWrap
+              ? naturalWidths.map((w) => Math.min(w, 60))
+              : naturalWidths;
+
+            const padCell = (text, width) => (text || '').padEnd(width, ' ');
+            const formatLine = (cells) =>
+              `| ${cells.map((cell, i) => padCell(cell, widths[i])).join(' | ')} |`;
+
+            const expandRow = (row) => {
+              const wrapped = widths.map((w, c) => wrapCellText(row[c] || '', w));
+              const lineCount = Math.max(...wrapped.map((cell) => cell.length));
+              const lines = [];
+              for (let i = 0; i < lineCount; i++) {
+                const cells = wrapped.map((cell) => i < cell.length ? cell[i] : '');
+                lines.push(formatLine(cells));
+              }
+              return lines;
+            };
+
+            const headerLines = expandRow(headerCells);
+            const separatorLine = `| ${widths.map((width) => '-'.repeat(Math.max(width, 3))).join(' | ')} |`;
+            const bodyLines = valueRows.flatMap(expandRow);
+
+            return [...headerLines, separatorLine, ...bodyLines].join('\\n');
+          }
+
+          function pickTableRendering(table) {
+            // Mirror the Swift exporter's resolveLayout. .flattenAll
+            // always flattens; .flattenWide flattens only when the table
+            // is wider than the threshold; .wrap always uses code-block
+            // layout (with cell wrapping if wide).
+            if (tableMode === 'flattenAll') {
+              return tableToRows(table);
+            }
+            if (tableMode === 'flattenWide') {
+              const rows = Array.from(table.querySelectorAll('tr')).map((row) =>
+                Array.from(row.children).map((cell) => normalizeText(cell.textContent))
+              );
+              if (naturalCodeBlockLineWidth(rows) > 120) {
+                return tableToRows(table);
+              }
+              return tableToCodeBlock(table);
+            }
+            // .wrap (default): use the wrapping code-block renderer.
+            const pre = document.createElement('pre');
+            const code = document.createElement('code');
+            code.textContent = tableToCodeBlockText(table, { wrap: true });
+            pre.appendChild(code);
+            return pre;
           }
 
           function pad(value, width) {
@@ -1316,11 +1522,7 @@ final class PreviewSelectionBridge: NSObject {
             });
 
             container.querySelectorAll('table').forEach((table) => {
-              table.replaceWith(
-                tableMode === 'codeBlock'
-                  ? tableToCodeBlock(table)
-                  : tableToRows(table)
-              );
+              table.replaceWith(pickTableRendering(table));
             });
 
             convertHeadings(container);
@@ -1385,7 +1587,7 @@ final class PreviewSelectionBridge: NSObject {
         let script = """
         return (() => {
           const sourceHTML = htmlDocument;
-          const tableMode = "\(tableMode == .codeBlock ? "codeBlock" : "readableRows")";
+          const tableMode = "\(tableMode.rawValue)";
 
           function makeSpacer() {
             const spacer = document.createElement('p');
@@ -1400,6 +1602,48 @@ final class PreviewSelectionBridge: NSObject {
 
           function normalizeText(value) {
             return (value || '').replace(/\\s+/g, ' ').trim();
+          }
+
+          // Mirror the Swift exporter:
+          //   * tableWideThreshold = 120 (line-width above which a table
+          //     is "wide" enough to either wrap or flatten)
+          //   * tableWrapColumnWidth = 60 (per-column cap when wrapping)
+          function naturalCodeBlockLineWidth(rows) {
+            if (rows.length === 0 || rows[0].length === 0) return 0;
+            const widths = rows[0].map((_, c) =>
+              Math.max(...rows.map((row) => (row[c] || '').length), 0)
+            );
+            return 4 + widths.reduce((a, b) => a + b, 0) + Math.max(0, 3 * (widths.length - 1));
+          }
+
+          function wrapCellText(text, width) {
+            if (width <= 0) return [text];
+            if (text.length <= width) return [text];
+            const lines = [];
+            let current = '';
+            for (const word of text.split(' ')) {
+              if (!word) continue;
+              if (word.length > width) {
+                if (current) { lines.push(current); current = ''; }
+                let remaining = word;
+                while (remaining.length > width) {
+                  lines.push(remaining.slice(0, width));
+                  remaining = remaining.slice(width);
+                }
+                current = remaining;
+                continue;
+              }
+              if (!current) {
+                current = word;
+              } else if (current.length + 1 + word.length <= width) {
+                current += ' ' + word;
+              } else {
+                lines.push(current);
+                current = word;
+              }
+            }
+            if (current) lines.push(current);
+            return lines.length === 0 ? [''] : lines;
           }
 
           function tableToRows(table) {
@@ -1429,10 +1673,7 @@ final class PreviewSelectionBridge: NSObject {
                 if (index > 0) {
                   row.appendChild(document.createElement('br'));
                 }
-
-                const label = document.createElement('strong');
-                label.textContent = `${header}: `;
-                row.appendChild(label);
+                row.appendChild(document.createTextNode(`${header}: `));
                 row.appendChild(document.createTextNode(values[index] || ''));
               });
 
@@ -1451,6 +1692,72 @@ final class PreviewSelectionBridge: NSObject {
             }
 
             return container;
+          }
+
+          function tableToCodeBlockText(table, { wrap }) {
+            const rows = Array.from(table.querySelectorAll('tr')).map((row) =>
+              Array.from(row.children).map((cell) => normalizeText(cell.textContent))
+            );
+            if (rows.length < 2) return normalizeText(table.innerText);
+
+            const headerCells = rows[0];
+            const valueRows = rows.slice(1);
+
+            const naturalWidths = headerCells.map((_, c) =>
+              Math.max(headerCells[c].length, ...valueRows.map((row) => (row[c] || '').length))
+            );
+            const naturalLine = 4 + naturalWidths.reduce((a, b) => a + b, 0) + Math.max(0, 3 * (naturalWidths.length - 1));
+
+            const shouldWrap = wrap && naturalLine > 120;
+            const widths = shouldWrap
+              ? naturalWidths.map((w) => Math.min(w, 60))
+              : naturalWidths;
+
+            const padCell = (text, width) => (text || '').padEnd(width, ' ');
+            const formatLine = (cells) =>
+              `| ${cells.map((cell, i) => padCell(cell, widths[i])).join(' | ')} |`;
+
+            const expandRow = (row) => {
+              const wrapped = widths.map((w, c) => wrapCellText(row[c] || '', w));
+              const lineCount = Math.max(...wrapped.map((cell) => cell.length));
+              const lines = [];
+              for (let i = 0; i < lineCount; i++) {
+                const cells = wrapped.map((cell) => i < cell.length ? cell[i] : '');
+                lines.push(formatLine(cells));
+              }
+              return lines;
+            };
+
+            const headerLines = expandRow(headerCells);
+            const separatorLine = `| ${widths.map((width) => '-'.repeat(Math.max(width, 3))).join(' | ')} |`;
+            const bodyLines = valueRows.flatMap(expandRow);
+
+            return [...headerLines, separatorLine, ...bodyLines].join('\\n');
+          }
+
+          function pickTableRendering(table) {
+            // Mirror the Swift exporter's resolveLayout. .flattenAll
+            // always flattens; .flattenWide flattens only when the table
+            // is wider than the threshold; .wrap always uses code-block
+            // layout (with cell wrapping if wide).
+            if (tableMode === 'flattenAll') {
+              return tableToRows(table);
+            }
+            if (tableMode === 'flattenWide') {
+              const rows = Array.from(table.querySelectorAll('tr')).map((row) =>
+                Array.from(row.children).map((cell) => normalizeText(cell.textContent))
+              );
+              if (naturalCodeBlockLineWidth(rows) > 120) {
+                return tableToRows(table);
+              }
+              return tableToCodeBlock(table);
+            }
+            // .wrap (default): use the wrapping code-block renderer.
+            const pre = document.createElement('pre');
+            const code = document.createElement('code');
+            code.textContent = tableToCodeBlockText(table, { wrap: true });
+            pre.appendChild(code);
+            return pre;
           }
 
           function pad(value, width) {
@@ -1511,11 +1818,7 @@ final class PreviewSelectionBridge: NSObject {
             });
 
             container.querySelectorAll('table').forEach((table) => {
-              table.replaceWith(
-                tableMode === 'codeBlock'
-                  ? tableToCodeBlock(table)
-                  : tableToRows(table)
-              );
+              table.replaceWith(pickTableRendering(table));
             });
 
             convertHeadings(container);

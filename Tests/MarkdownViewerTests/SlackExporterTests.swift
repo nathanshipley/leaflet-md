@@ -49,7 +49,7 @@ final class SlackExporterTests: XCTestCase {
         | Sam | Engineering |
         """
 
-        let exported = SlackExporter().export(markdown: markdown)
+        let exported = SlackExporter().export(markdown: markdown, tableMode: .flattenAll)
 
         XCTAssertTrue(exported.contains("Name: Alex\nRole: Design"))
         XCTAssertTrue(exported.contains("Name: Sam\nRole: Engineering"))
@@ -71,7 +71,7 @@ final class SlackExporterTests: XCTestCase {
         XCTAssertTrue(html.contains("<p class=\"slack-spacer\"><br></p>"))
     }
 
-    func testExportsTablesAsCodeBlocksWhenRequested() {
+    func testExportsNarrowTablesAsCodeBlocksInWrapMode() {
         let markdown = """
         | Language | Rank | Appeared |
         | --- | --- | --- |
@@ -80,8 +80,8 @@ final class SlackExporterTests: XCTestCase {
         | Scratch | 17 | 2002 |
         """
 
-        let plainText = SlackExporter().export(markdown: markdown, tableMode: .codeBlock)
-        let html = SlackExporter().exportHTMLDocument(markdown: markdown, tableMode: .codeBlock)
+        let plainText = SlackExporter().export(markdown: markdown, tableMode: .wrap)
+        let html = SlackExporter().exportHTMLDocument(markdown: markdown, tableMode: .wrap)
 
         XCTAssertTrue(plainText.contains("```"))
         XCTAssertTrue(plainText.contains("| Language"))
@@ -89,6 +89,77 @@ final class SlackExporterTests: XCTestCase {
         XCTAssertTrue(html.contains("<pre><code>"))
         XCTAssertTrue(html.contains("| Language"))
         XCTAssertTrue(html.contains("| JavaScript"))
+    }
+
+    func testWrapModeWidensCodeBlockTableCellsToMultipleLines() {
+        // Wide 2-column table — second column has cells well over 60
+        // chars. Wrap mode should keep the code-block layout but split
+        // long cell text across multiple visual lines, padding the
+        // narrower column with spaces to maintain alignment.
+        let markdown = """
+        | File | What it is |
+        | ---- | ---------- |
+        | `horizontal.wgsl` | Horizontal pass — runs once per channel (R, G, B, A) into 4 separate textures |
+        | `index.ts` | TypeScript pipeline orchestration. Reads as pseudocode for Rust/wgpu — useful as a reference for pass dispatch order, bind groups, and uniform layout |
+        """
+
+        let plainText = SlackExporter().export(markdown: markdown, tableMode: .wrap)
+
+        XCTAssertTrue(plainText.contains("```"), "wrap mode keeps the code-block layout")
+        XCTAssertTrue(plainText.contains("| File"), "wrap mode keeps the markdown pipe layout")
+        XCTAssertFalse(
+            plainText.contains("once per channel (R, G, B, A) into 4 separate textures |"),
+            "wide cell content should be split across multiple visual lines, not packed onto one"
+        )
+        // After the first line of a wrapped row, the narrower column
+        // gets padded out so columns stay aligned. Look for any line
+        // whose first cell is purely whitespace.
+        let lines = plainText.components(separatedBy: "\n")
+        let hasContinuationLine = lines.contains { line in
+            guard line.hasPrefix("| ") else { return false }
+            // Strip "| " prefix, take up to next " | "
+            let body = line.dropFirst(2)
+            guard let separatorRange = body.range(of: " | ") else { return false }
+            let firstCell = body[..<separatorRange.lowerBound]
+            return !firstCell.isEmpty && firstCell.allSatisfy { $0 == " " }
+        }
+        XCTAssertTrue(hasContinuationLine, "wrapped continuation rows should pad the narrower column with spaces")
+        XCTAssertFalse(plainText.contains("File:"), "wrap mode never produces flatten-style Label: value rows")
+    }
+
+    func testFlattenWideModeFallsBackToReadableRowsForWideTables() {
+        let markdown = """
+        | File | What it is |
+        | ---- | ---------- |
+        | `horizontal.wgsl` | Horizontal pass — runs once per channel (R, G, B, A) into 4 separate textures |
+        | `index.ts` | TypeScript pipeline orchestration. Reads as pseudocode for Rust/wgpu — useful as a reference for pass dispatch order, bind groups, and uniform layout |
+        """
+
+        let plainText = SlackExporter().export(markdown: markdown, tableMode: .flattenWide)
+        let html = SlackExporter().exportHTMLDocument(markdown: markdown, tableMode: .flattenWide)
+
+        XCTAssertFalse(plainText.contains("```"), "wide table under flattenWide should not stay code-block")
+        XCTAssertFalse(plainText.contains("| File"))
+        XCTAssertTrue(plainText.contains("File: `horizontal.wgsl`"))
+        XCTAssertTrue(plainText.contains("File: `index.ts`"))
+
+        XCTAssertFalse(html.contains("<pre><code>"))
+        XCTAssertTrue(html.contains("class=\"slack-table-row\""))
+    }
+
+    func testFlattenWideModeKeepsNarrowTablesAsCodeBlocks() {
+        let markdown = """
+        | Model | Role | Pricing | Notes |
+        | --- | --- | --- | --- |
+        | GPT-5.4 | Frontier reasoning | High | Best for hard bugs |
+        | GPT-5.4 Mini | Fast iteration | Lower | Lighter coding tasks |
+        """
+
+        let plainText = SlackExporter().export(markdown: markdown, tableMode: .flattenWide)
+
+        XCTAssertTrue(plainText.contains("```"), "narrow table should keep its code-block fence")
+        XCTAssertTrue(plainText.contains("| Model"))
+        XCTAssertFalse(plainText.contains("Model:"), "narrow code-block table should not flatten")
     }
 
     func testPreservesSlackFormattingMarkersInPlainText() {
@@ -275,7 +346,7 @@ final class SlackExporterTests: XCTestCase {
         | Sam | Engineering |
         """
 
-        let json = SlackExporter().exportSlackTexty(markdown: markdown, tableMode: .codeBlock)
+        let json = SlackExporter().exportSlackTexty(markdown: markdown, tableMode: .wrap)
         let document = try textyDocument(from: json)
         let ops = try XCTUnwrap(document["ops"] as? [[String: Any]])
 

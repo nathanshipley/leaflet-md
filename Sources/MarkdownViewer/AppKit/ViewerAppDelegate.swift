@@ -314,6 +314,10 @@ public final class ViewerAppDelegate: NSObject, NSApplicationDelegate, NSMenuDel
         preferences.allowWideContent.toggle()
     }
 
+    @objc func toggleWrapCodeViewLines(_ sender: NSMenuItem) {
+        preferences.wrapCodeViewLines.toggle()
+    }
+
     // MARK: - Menu Validation
 
     @objc func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
@@ -337,6 +341,15 @@ public final class ViewerAppDelegate: NSObject, NSApplicationDelegate, NSMenuDel
             return !wc.controller.findQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case #selector(closeAllWindows(_:)):
             return NSApp.orderedWindows.contains { $0.isVisible && !$0.isExcludedFromWindowsMenu }
+        case #selector(toggleWideContent(_:)):
+            // Reflect the current preference as a checkmark on every
+            // menu open. Observer-driven updates were unreliable in
+            // practice — this guarantees the state is always fresh.
+            menuItem.state = preferences.allowWideContent ? .on : .off
+            return true
+        case #selector(toggleWrapCodeViewLines(_:)):
+            menuItem.state = preferences.wrapCodeViewLines ? .on : .off
+            return true
         default:
             return true
         }
@@ -581,6 +594,11 @@ public final class ViewerAppDelegate: NSObject, NSApplicationDelegate, NSMenuDel
         wideItem.target = self
         viewMenu.addItem(wideItem)
 
+        let wrapItem = NSMenuItem(title: "Wrap Long Lines in Code View", action: #selector(toggleWrapCodeViewLines(_:)), keyEquivalent: "")
+        wrapItem.target = self
+        wrapItem.state = preferences.wrapCodeViewLines ? .on : .off
+        viewMenu.addItem(wrapItem)
+
         let item = NSMenuItem()
         item.submenu = viewMenu
         return item
@@ -640,6 +658,10 @@ public final class ViewerAppDelegate: NSObject, NSApplicationDelegate, NSMenuDel
 
         if let wideItem = viewMenu.item(withTitle: "Allow text to use the full window width") {
             wideItem.state = preferences.allowWideContent ? .on : .off
+        }
+
+        if let wrapItem = viewMenu.item(withTitle: "Wrap Long Lines in Code View") {
+            wrapItem.state = preferences.wrapCodeViewLines ? .on : .off
         }
     }
 }

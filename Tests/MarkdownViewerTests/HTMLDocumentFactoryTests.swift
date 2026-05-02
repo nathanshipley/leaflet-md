@@ -31,7 +31,8 @@ final class HTMLDocumentFactoryTests: XCTestCase {
             renderingPreferences: PreviewRenderingPreferences(
                 marginPreset: .extraWide,
                 fontPreset: .inter,
-                allowWideContent: true
+                allowWideContent: true,
+                wrapCodeViewLines: false
             )
         )
 

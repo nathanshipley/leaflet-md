@@ -65,14 +65,14 @@ public struct MarkdownViewerSettingsView: View {
             }
 
             Section {
-                Toggle(
-                    "Flatten copied tables instead of using code blocks",
-                    isOn: $preferences.flattenSlackTables
-                )
+                Picker("Slack tables", selection: $preferences.slackTableMode) {
+                    ForEach(SlackTableRenderingMode.allCases, id: \.self) { mode in
+                        Text(mode.settingsLabel).tag(mode)
+                    }
+                }
+                .pickerStyle(.radioGroup)
 
-                Text(preferences.flattenSlackTables
-                     ? "Slack copy uses readable label-and-value table rows."
-                     : "Slack copy uses monospaced codeblock tables by default.")
+                Text(slackTableModeDescription(preferences.slackTableMode))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             } header: {
@@ -82,5 +82,16 @@ public struct MarkdownViewerSettingsView: View {
         .formStyle(.grouped)
         .frame(width: 540)
         .padding(20)
+    }
+
+    private func slackTableModeDescription(_ mode: SlackTableRenderingMode) -> String {
+        switch mode {
+        case .wrap:
+            return "Slack copy always uses code-block tables. Wide tables get their cell content wrapped to multiple lines so the table fits without scrolling."
+        case .flattenWide:
+            return "Narrow tables stay as code-block tables. Wide tables get flattened into readable label-and-value rows."
+        case .flattenAll:
+            return "Slack copy always uses readable label-and-value rows, regardless of table width."
+        }
     }
 }

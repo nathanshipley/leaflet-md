@@ -6,28 +6,28 @@ struct SlackExporter {
 
     func export(
         markdown: String,
-        tableMode: SlackTableRenderingMode = .readableRows
+        tableMode: SlackTableRenderingMode = .wrap
     ) -> String {
         renderPlainText(blocks(from: markdown), tableMode: tableMode)
     }
 
     func exportHTMLDocument(
         markdown: String,
-        tableMode: SlackTableRenderingMode = .readableRows
+        tableMode: SlackTableRenderingMode = .wrap
     ) -> String {
         makeHTMLDocument(renderHTML(blocks(from: markdown), tableMode: tableMode))
     }
 
     func exportAttributed(
         markdown: String,
-        tableMode: SlackTableRenderingMode = .readableRows
+        tableMode: SlackTableRenderingMode = .wrap
     ) -> NSAttributedString {
         renderAttributedText(blocks(from: markdown), tableMode: tableMode)
     }
 
     func exportSlackTexty(
         markdown: String,
-        tableMode: SlackTableRenderingMode = .readableRows
+        tableMode: SlackTableRenderingMode = .wrap
     ) -> String {
         let encoder = JSONEncoder()
         guard
@@ -136,7 +136,7 @@ struct SlackExporter {
                 case .horizontalRule:
                     return horizontalRuleText()
                 case let .table(rows):
-                    switch tableMode {
+                    switch effectiveLayout(rows: rows, configured: tableMode) {
                     case .readableRows:
                         return rows
                             .map { row in
@@ -180,7 +180,7 @@ struct SlackExporter {
                 case .horizontalRule:
                     return "<p class=\"slack-rule\">\(horizontalRuleText().htmlEscaped)</p>"
                 case let .table(rows):
-                    switch tableMode {
+                    switch effectiveLayout(rows: rows, configured: tableMode) {
                     case .readableRows:
                         return rows
                             .map(renderHTMLTableRow(_:))
@@ -246,7 +246,7 @@ struct SlackExporter {
                 output.append(codeBlock)
             case let .table(rows):
                 let tableBlock: NSMutableAttributedString
-                switch tableMode {
+                switch effectiveLayout(rows: rows, configured: tableMode) {
                 case .readableRows:
                     tableBlock = NSMutableAttributedString()
 
@@ -324,9 +324,9 @@ struct SlackExporter {
             case .horizontalRule:
                 builder.append(horizontalRuleText())
             case let .table(rows):
-                switch tableMode {
+                switch effectiveLayout(rows: rows, configured: tableMode) {
                 case .readableRows:
-                    builder.append(renderPlainText([.table(rows)], tableMode: tableMode))
+                    appendTextyReadableTable(rows, to: &builder)
                 case .codeBlock:
                     appendTextyCodeBlock(
                         renderCodeBlockTable(rows).components(separatedBy: "\n"),
@@ -407,6 +407,25 @@ struct SlackExporter {
         return output
     }
 
+    private func appendTextyReadableTable(
+        _ rows: [[(label: String, value: String)]],
+        to builder: inout SlackTextyBuilder
+    ) {
+        for (rowIndex, row) in rows.enumerated() {
+            if rowIndex > 0 {
+                builder.append("\n\n")
+            }
+
+            for (pairIndex, pair) in row.enumerated() {
+                if pairIndex > 0 {
+                    builder.append("\n")
+                }
+                builder.append(renderInlinePlainText(pair.label) + ": ")
+                appendInlineTexty(pair.value, to: &builder)
+            }
+        }
+    }
+
     private func appendTextyList(
         _ items: [SlackListItem],
         to builder: inout SlackTextyBuilder
@@ -484,7 +503,7 @@ struct SlackExporter {
     private func renderHTMLTableRow(_ row: [(label: String, value: String)]) -> String {
         let content = row
             .map { pair in
-                "<strong>\(renderInlinePlainText(pair.label).htmlEscaped):</strong> \(renderInlineHTML(pair.value))"
+                "\(renderInlinePlainText(pair.label).htmlEscaped): \(renderInlineHTML(pair.value))"
             }
             .joined(separator: "<br>")
 
@@ -497,6 +516,53 @@ struct SlackExporter {
 
     private func renderTableAsCodeBlockPlainText(_ rows: [[(label: String, value: String)]]) -> String {
         ["```", renderCodeBlockTable(rows), "```"].joined(separator: "\n")
+    }
+
+    // Width above which we consider a table "wide" — used both as the
+    // trigger for flatten-wide mode and the trigger for cell-wrap mode.
+    // Picked to leave narrow rollup-style tables alone (they fit) and only
+    // engage on tables with one or more genuinely long cells.
+    private static let tableWideThreshold = 120
+
+    // Per-column cap when wrapping a wide table's cells. Each column's
+    // effective width is min(naturalWidth, this). Cells longer than this
+    // word-wrap to multiple visual lines.
+    private static let tableWrapColumnWidth = 60
+
+    /// Resolve the user's preference into the actual layout we'll use for
+    /// THIS specific table. The wrap-vs-fit decision happens inside
+    /// `renderCodeBlockTable`, so here we only choose between code-block
+    /// and readable-rows.
+    private func effectiveLayout(
+        rows: [[(label: String, value: String)]],
+        configured: SlackTableRenderingMode
+    ) -> SlackTableLayout {
+        switch configured {
+        case .flattenAll:
+            return .readableRows
+        case .flattenWide:
+            return naturalCodeBlockTableLineWidth(rows: rows) > Self.tableWideThreshold
+                ? .readableRows
+                : .codeBlock
+        case .wrap:
+            return .codeBlock
+        }
+    }
+
+    private func naturalCodeBlockTableLineWidth(rows: [[(label: String, value: String)]]) -> Int {
+        guard let firstRow = rows.first, !firstRow.isEmpty else {
+            return 0
+        }
+        let headers = firstRow.map { renderInlinePlainText($0.label) }
+        let values = rows.map { row in row.map { renderInlinePlainText($0.value) } }
+        let widths = headers.indices.map { column in
+            max(
+                headers[column].count,
+                values.map { row in row.indices.contains(column) ? row[column].count : 0 }.max() ?? 0
+            )
+        }
+        // Mirrors markdownTableLine: "| " + cells joined by " | " + " |"
+        return 2 + widths.reduce(0, +) + max(0, 3 * (widths.count - 1)) + 2
     }
 
     private func renderCodeBlockTable(_ rows: [[(label: String, value: String)]]) -> String {
@@ -512,18 +578,113 @@ struct SlackExporter {
             row.map { renderInlinePlainText($0.value) }
         }
 
-        let widths = headers.indices.map { column in
+        // Natural per-column widths.
+        let naturalWidths = headers.indices.map { column in
             max(
                 headers[column].count,
                 values.map { row in row.indices.contains(column) ? row[column].count : 0 }.max() ?? 0
             )
         }
 
-        let headerLine = markdownTableLine(cells: headers, widths: widths)
-        let separatorLine = markdownTableSeparator(widths: widths)
-        let bodyLines = values.map { markdownTableLine(cells: $0, widths: widths) }
+        let naturalLineWidth = 2 + naturalWidths.reduce(0, +) + max(0, 3 * (naturalWidths.count - 1)) + 2
 
-        return ([headerLine, separatorLine] + bodyLines).joined(separator: "\n")
+        // Decide whether to wrap. If the natural rendering already fits,
+        // no wrapping needed — keep narrow tables looking the same as
+        // before. Otherwise cap each column at the wrap width so cells
+        // wrap to multiple visual lines.
+        let shouldWrap = naturalLineWidth > Self.tableWideThreshold
+        let widths = shouldWrap
+            ? naturalWidths.map { min($0, Self.tableWrapColumnWidth) }
+            : naturalWidths
+
+        // Wrap header and each value cell to its column width.
+        let wrappedHeaders = headers.indices.map { column in
+            wrapCell(headers[column], width: widths[column])
+        }
+        let wrappedValues = values.map { row in
+            widths.indices.map { column in
+                let content = row.indices.contains(column) ? row[column] : ""
+                return wrapCell(content, width: widths[column])
+            }
+        }
+
+        // Header may itself span multiple visual lines if a header cell
+        // is longer than the column cap.
+        let headerLines = expandRow(wrappedHeaders, widths: widths)
+        let separatorLine = markdownTableSeparator(widths: widths)
+
+        // Body: each logical row expands to as many visual lines as its
+        // tallest wrapped cell. Empty cells get padded with spaces.
+        let bodyLines = wrappedValues.flatMap { wrappedRow in
+            expandRow(wrappedRow, widths: widths)
+        }
+
+        return (headerLines + [separatorLine] + bodyLines).joined(separator: "\n")
+    }
+
+    /// Word-wrap text to fit a column width. Falls back to hard-break for
+    /// any single word longer than the column width so we never truncate
+    /// content. Returns at least one line (an empty string if input is
+    /// empty) so every cell contributes one visual line minimum.
+    private func wrapCell(_ text: String, width: Int) -> [String] {
+        guard width > 0 else { return [text] }
+        if text.count <= width { return [text] }
+
+        var lines: [String] = []
+        var current = ""
+
+        for word in text.components(separatedBy: " ") {
+            if word.isEmpty {
+                continue
+            }
+
+            if word.count > width {
+                // Word longer than column: flush whatever's in the
+                // buffer, then hard-break the long word.
+                if !current.isEmpty {
+                    lines.append(current)
+                    current = ""
+                }
+                var remaining = word
+                while remaining.count > width {
+                    let head = remaining.prefix(width)
+                    lines.append(String(head))
+                    remaining = String(remaining.dropFirst(width))
+                }
+                current = remaining
+                continue
+            }
+
+            if current.isEmpty {
+                current = word
+            } else if current.count + 1 + word.count <= width {
+                current += " " + word
+            } else {
+                lines.append(current)
+                current = word
+            }
+        }
+
+        if !current.isEmpty {
+            lines.append(current)
+        }
+
+        return lines.isEmpty ? [""] : lines
+    }
+
+    /// Take a row of wrapped cells (each is `[String]` of visual lines)
+    /// and expand into a list of physical line strings. Cells that ran
+    /// out of content get rendered as blank space at full column width
+    /// so the table alignment holds.
+    private func expandRow(_ wrappedRow: [[String]], widths: [Int]) -> [String] {
+        let physicalLineCount = wrappedRow.map(\.count).max() ?? 1
+        return (0..<physicalLineCount).map { lineIndex in
+            let cells = widths.indices.map { column -> String in
+                let lines = column < wrappedRow.count ? wrappedRow[column] : [""]
+                return lineIndex < lines.count ? lines[lineIndex] : ""
+            }
+            return markdownTableLine(cells: cells, widths: widths)
+        }
     }
 
     private func markdownTableLine(cells: [String], widths: [Int]) -> String {
@@ -1611,16 +1772,49 @@ private struct SlackTextyBuilder {
     }
 }
 
-enum SlackTableRenderingMode: Equatable, Sendable {
-    case readableRows
-    case codeBlock
+/// User-facing preference for how Markdown tables should be transformed
+/// when copying for Slack. Each case maps to one or more internal
+/// `SlackTableLayout` decisions per-table inside the exporter.
+public enum SlackTableRenderingMode: String, Equatable, Sendable, CaseIterable {
+    /// Default. Always render as a code-block table. Wide tables get
+    /// their cell content word-wrapped so the whole table stays inside
+    /// Slack's visible code-block width.
+    case wrap
+
+    /// Render as a code-block table when the natural width fits.
+    /// Auto-fall-back to `Label: value` rows when a single table would
+    /// overflow Slack's visible width.
+    case flattenWide
+
+    /// Always render as `Label: value` rows regardless of width.
+    case flattenAll
+
+    var settingsLabel: String {
+        switch self {
+        case .wrap:
+            return "Don't flatten tables"
+        case .flattenWide:
+            return "Flatten wide tables only"
+        case .flattenAll:
+            return "Flatten all tables"
+        }
+    }
 
     var statusDescription: String {
         switch self {
-        case .readableRows:
-            return "for Slack with flattened tables"
-        case .codeBlock:
+        case .wrap:
             return "for Slack"
+        case .flattenWide:
+            return "for Slack with wide tables flattened"
+        case .flattenAll:
+            return "for Slack with flattened tables"
         }
     }
+}
+
+/// Internal per-table decision the exporter makes after evaluating the
+/// user's preference against this specific table's natural width.
+enum SlackTableLayout: Equatable, Sendable {
+    case codeBlock
+    case readableRows
 }

@@ -24,7 +24,7 @@ final class MarkdownDocumentController: ObservableObject {
     let previewSelectionBridge = PreviewSelectionBridge()
     private var renderingPreferences = PreviewRenderingPreferences.standard
     private var documentOpenMode: DocumentOpenMode = .tab
-    private var preferredSlackTableMode: SlackTableRenderingMode = .codeBlock
+    private var preferredSlackTableMode: SlackTableRenderingMode = .wrap
     private var renderTask: Task<Void, Never>?
     private var findTask: Task<Void, Never>?
     private var pendingPreviewSelectionCapture: Task<PreviewSlackSelectionSnapshot?, Never>?
@@ -111,7 +111,8 @@ final class MarkdownDocumentController: ObservableObject {
             displayMode.rawValue,
             renderingPreferences.marginPreset.rawValue,
             renderingPreferences.fontPreset.rawValue,
-            renderingPreferences.allowWideContent.description
+            renderingPreferences.allowWideContent.description,
+            renderingPreferences.wrapCodeViewLines.description
         ].joined(separator: "::")
 
         guard force || signature != lastRenderSignature else {
@@ -202,6 +203,17 @@ final class MarkdownDocumentController: ObservableObject {
     func copySystemSelection() async -> Bool {
         switch displayMode {
         case .preview:
+            // In Preview, Cmd+C means "I want to paste this somewhere
+            // useful" - which for a Markdown reader almost always means
+            // Slack. Route through the same pipeline as the Copy for Slack
+            // menu item so users get the rich clipboard payload (HTML,
+            // attributed string, plain text, slack-texty) by default.
+            // Falls back to native selection copy if there's no document
+            // to render.
+            if canCopyForSlack {
+                await copyForSlack()
+                return true
+            }
             return previewSelectionBridge.copyNativeSelection()
         case .code:
             guard let selectedSource = await previewSelectionBridge.selectedSourceText() else {
