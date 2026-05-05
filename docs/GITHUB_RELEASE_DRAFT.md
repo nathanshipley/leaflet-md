@@ -1,9 +1,9 @@
-# Leaflet v0.1.0-beta.1
+# Leaflet v0.1.0-beta.9
 
-First friend-testing beta for Apple Silicon Macs running macOS 13 or newer.
+Beta.9 keeps Leaflet's GitHub-style Preview rendering as the visual source of truth and adds the new tight selection overlay experiment as the current selection compromise.
 
-Download `Leaflet-v0.1.0-beta.1-macOS-arm64.zip`, unzip it, move `Leaflet.app` to Applications, and open it.
+Download `Leaflet-v0.1.0-beta.9-macOS-universal.dmg`, double-click it, drag `Leaflet.app` to Applications, and open it.
 
-If macOS blocks the app because it is from an unidentified developer, Control-click `Leaflet.app`, choose **Open**, then choose **Open** again. This is expected for the early unsigned beta.
+The build is signed and notarized. If macOS still prompts on first launch, Control-click `Leaflet.app`, choose **Open**, then choose **Open** again.
 
-Please send feedback with your macOS version, whether you used Slack desktop or browser Slack, and a screenshot or sample Markdown if something breaks.
+Please send feedback with your macOS version, whether you used Slack desktop or browser Slack, and a screenshot or sample Markdown if selection, tables, code blocks, or Slack pasting look off.

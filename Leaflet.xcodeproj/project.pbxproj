@@ -231,7 +231,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0-beta.8;
+				MARKETING_VERSION = 0.1.0-beta.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nathanshipley.leaflet;
 				PRODUCT_NAME = Leaflet;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -255,7 +255,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0-beta.8;
+				MARKETING_VERSION = 0.1.0-beta.9;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp --options=runtime";
 				PRODUCT_BUNDLE_IDENTIFIER = com.nathanshipley.leaflet;
 				PRODUCT_NAME = Leaflet;

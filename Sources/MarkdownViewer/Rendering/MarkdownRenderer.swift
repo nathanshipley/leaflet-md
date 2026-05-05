@@ -35,7 +35,35 @@ struct MarkdownRenderer {
 
         switch displayMode {
         case .preview:
-            return renderPreview(markdown: markdown, context: context, preferences: preferences)
+            return renderPreview(
+                markdown: markdown,
+                displayMode: .preview,
+                context: context,
+                preferences: preferences
+            )
+        case .pdf:
+            return renderPreview(
+                markdown: markdown,
+                displayMode: .pdf,
+                context: context,
+                preferences: preferences,
+                note: "PDF proof-of-concept renderer is active."
+            )
+        case .overlay:
+            return renderPreview(
+                markdown: markdown,
+                displayMode: .overlay,
+                context: context,
+                preferences: preferences,
+                note: "Tight selection overlay proof-of-concept renderer is active."
+            )
+        case .textKit:
+            return .placeholder(
+                title: context.title,
+                displayMode: .textKit,
+                note: "TextKit proof-of-concept renderer is active.",
+                renderingPreferences: preferences
+            )
         case .code:
             return renderCode(markdown: markdown, context: context, preferences: preferences)
         }
@@ -43,6 +71,7 @@ struct MarkdownRenderer {
 
     private func renderPreview(
         markdown: String,
+        displayMode: MarkdownDisplayMode,
         context: RenderContext,
         preferences: PreviewRenderingPreferences,
         note: String? = nil
@@ -51,7 +80,7 @@ struct MarkdownRenderer {
             let body = try localRenderer.render(markdown: markdown)
             return makeRenderedDocument(
                 bodyHTML: body,
-                displayMode: .preview,
+                displayMode: displayMode,
                 context: context,
                 preferences: preferences,
                 note: note
@@ -63,7 +92,7 @@ struct MarkdownRenderer {
 
             return makeRenderedDocument(
                 bodyHTML: fallbackBody,
-                displayMode: .preview,
+                displayMode: displayMode,
                 context: context,
                 preferences: preferences,
                 note: "Markdown parsing failed, so the preview is showing escaped source text: \(error.localizedDescription)"

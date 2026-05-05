@@ -61,7 +61,7 @@ final class PreviewSelectionBridge: NSObject {
 
     weak var webView: WKWebView?
 
-    func installSelectionEnhancements() async {
+    func installSelectionEnhancements(selectionOverlayEnabled: Bool = false) async {
         guard let webView else {
             return
         }
@@ -77,6 +77,11 @@ final class PreviewSelectionBridge: NSObject {
           const cachedTextKey = '__markdownViewerCachedSelectionText';
           const cachedHTMLKey = '__markdownViewerCachedSelectionHTML';
           const cachedSourceTextKey = '__markdownViewerCachedSourceSelectionText';
+          const tightSelectionEnabled = \(selectionOverlayEnabled ? "true" : "false");
+          const tightSelectionLayerID = 'leaflet-tight-selection-layer';
+          const tightSelectionStyleID = 'leaflet-tight-selection-style';
+          const tightSelectionListenerFlag = '__leafletTightSelectionListenersInstalled';
+          const tightSelectionRAFKey = '__leafletTightSelectionRAF';
 
           \(Self.sourceSelectionHelperScript)
 
@@ -86,9 +91,287 @@ final class PreviewSelectionBridge: NSObject {
             window[cachedSourceTextKey] = '';
           }
 
+          function clearTightSelectionOverlay() {
+            const layer = document.getElementById(tightSelectionLayerID);
+            if (layer) {
+              layer.replaceChildren();
+            }
+          }
+
+          function teardownTightSelectionOverlay() {
+            document.documentElement.classList.remove('leaflet-tight-selection-active');
+            clearTightSelectionOverlay();
+
+            const layer = document.getElementById(tightSelectionLayerID);
+            if (layer) {
+              layer.remove();
+            }
+          }
+
+          function ensureTightSelectionStyle() {
+            if (document.getElementById(tightSelectionStyleID)) {
+              return;
+            }
+
+            const style = document.createElement('style');
+            style.id = tightSelectionStyleID;
+            style.textContent = `
+              html.leaflet-tight-selection-active ::selection {
+                background: transparent !important;
+                color: inherit !important;
+              }
+
+              #${tightSelectionLayerID} {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 0;
+                height: 0;
+                pointer-events: none;
+                z-index: 2147483647;
+              }
+
+              .leaflet-tight-selection-rect {
+                position: absolute;
+                box-sizing: border-box;
+                background: rgba(0, 122, 255, 0.30);
+                border-radius: 2px;
+                mix-blend-mode: multiply;
+              }
+            `;
+            document.head.appendChild(style);
+          }
+
+          function tightSelectionLayer() {
+            let layer = document.getElementById(tightSelectionLayerID);
+            if (!layer) {
+              layer = document.createElement('div');
+              layer.id = tightSelectionLayerID;
+              document.body.appendChild(layer);
+            }
+            return layer;
+          }
+
+          function verticalOverlap(a, b) {
+            const top = Math.max(a.top, b.top);
+            const bottom = Math.min(a.bottom, b.bottom);
+            return Math.max(0, bottom - top);
+          }
+
+          function selectedTextRects() {
+            const selection = window.getSelection();
+            if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+              return [];
+            }
+
+            const rootBounds = root.getBoundingClientRect();
+            const rects = [];
+
+            for (let rangeIndex = 0; rangeIndex < selection.rangeCount; rangeIndex += 1) {
+              const range = selection.getRangeAt(rangeIndex);
+              if (range.collapsed || !range.intersectsNode(root)) {
+                continue;
+              }
+
+              const walker = document.createTreeWalker(
+                root,
+                NodeFilter.SHOW_TEXT,
+                {
+                  acceptNode(node) {
+                    if (!node.nodeValue || node.nodeValue.trim().length === 0) {
+                      return NodeFilter.FILTER_REJECT;
+                    }
+
+                    const parent = node.parentElement;
+                    if (!parent || parent.closest('script, style, #leaflet-tight-selection-layer')) {
+                      return NodeFilter.FILTER_REJECT;
+                    }
+
+                    try {
+                      return range.intersectsNode(node)
+                        ? NodeFilter.FILTER_ACCEPT
+                        : NodeFilter.FILTER_REJECT;
+                    } catch {
+                      return NodeFilter.FILTER_REJECT;
+                    }
+                  }
+                }
+              );
+
+              while (walker.nextNode()) {
+                const node = walker.currentNode;
+                const text = node.nodeValue || '';
+                let start = 0;
+                let end = text.length;
+
+                if (node === range.startContainer) {
+                  start = Math.min(Math.max(range.startOffset, 0), text.length);
+                }
+                if (node === range.endContainer) {
+                  end = Math.min(Math.max(range.endOffset, 0), text.length);
+                }
+                if (start >= end) {
+                  continue;
+                }
+
+                const textRange = document.createRange();
+                textRange.setStart(node, start);
+                textRange.setEnd(node, end);
+
+                Array.from(textRange.getClientRects()).forEach((rect) => {
+                  if (
+                    rect.width < 0.75 ||
+                    rect.height < 2 ||
+                    rect.right < rootBounds.left - 1 ||
+                    rect.left > rootBounds.right + 1 ||
+                    rect.bottom < rootBounds.top - 1 ||
+                    rect.top > rootBounds.bottom + 1
+                  ) {
+                    return;
+                  }
+
+                  rects.push({
+                    left: rect.left + window.scrollX,
+                    right: rect.right + window.scrollX,
+                    top: rect.top + window.scrollY,
+                    bottom: rect.bottom + window.scrollY
+                  });
+                });
+              }
+            }
+
+            return rects;
+          }
+
+          function normalizedTightRects(rects) {
+            const sorted = rects
+              .map((rect) => ({
+                ...rect,
+                width: rect.right - rect.left,
+                height: rect.bottom - rect.top,
+                centerY: (rect.top + rect.bottom) / 2
+              }))
+              .filter((rect) => rect.width > 0.75 && rect.height > 2)
+              .sort((a, b) => a.top - b.top || a.left - b.left);
+
+            const lines = [];
+            sorted.forEach((rect) => {
+              const existing = lines.find((line) => {
+                const overlap = verticalOverlap(line, rect);
+                return Math.abs(line.centerY - rect.centerY) <= 4 ||
+                  overlap >= Math.min(line.height, rect.height) * 0.55;
+              });
+
+              if (existing) {
+                existing.rects.push(rect);
+                existing.top = Math.min(existing.top, rect.top);
+                existing.bottom = Math.max(existing.bottom, rect.bottom);
+                existing.height = existing.bottom - existing.top;
+                existing.centerY = (existing.top + existing.bottom) / 2;
+              } else {
+                lines.push({
+                  top: rect.top,
+                  bottom: rect.bottom,
+                  height: rect.height,
+                  centerY: rect.centerY,
+                  rects: [rect]
+                });
+              }
+            });
+
+            return lines.flatMap((line) => {
+              const merged = [];
+              const lineRects = line.rects.sort((a, b) => a.left - b.left);
+
+              lineRects.forEach((rect) => {
+                const previous = merged[merged.length - 1];
+                if (!previous) {
+                  merged.push({ ...rect });
+                  return;
+                }
+
+                const gap = rect.left - previous.right;
+                const overlap = verticalOverlap(previous, rect);
+                const canMerge = gap <= 2.5 &&
+                  overlap >= Math.min(previous.height, rect.height) * 0.45;
+
+                if (canMerge) {
+                  previous.left = Math.min(previous.left, rect.left);
+                  previous.right = Math.max(previous.right, rect.right);
+                  previous.top = Math.min(previous.top, rect.top);
+                  previous.bottom = Math.max(previous.bottom, rect.bottom);
+                  previous.width = previous.right - previous.left;
+                  previous.height = previous.bottom - previous.top;
+                } else {
+                  merged.push({ ...rect });
+                }
+              });
+
+              return merged;
+            });
+          }
+
+          function drawTightSelectionOverlay() {
+            if (!window.__leafletTightSelectionEnabled) {
+              teardownTightSelectionOverlay();
+              return;
+            }
+
+            ensureTightSelectionStyle();
+            document.documentElement.classList.add('leaflet-tight-selection-active');
+
+            const layer = tightSelectionLayer();
+            layer.replaceChildren();
+
+            const rects = normalizedTightRects(selectedTextRects());
+            if (rects.length === 0) {
+              return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            rects.forEach((rect) => {
+              const highlight = document.createElement('div');
+              highlight.className = 'leaflet-tight-selection-rect';
+              highlight.style.transform = `translate(${rect.left.toFixed(2)}px, ${rect.top.toFixed(2)}px)`;
+              highlight.style.width = `${Math.max(1, rect.right - rect.left).toFixed(2)}px`;
+              highlight.style.height = `${Math.max(1, rect.bottom - rect.top).toFixed(2)}px`;
+              fragment.appendChild(highlight);
+            });
+            layer.appendChild(fragment);
+          }
+
+          function scheduleTightSelectionOverlayUpdate() {
+            if (!window.__leafletTightSelectionEnabled) {
+              teardownTightSelectionOverlay();
+              return;
+            }
+
+            if (window[tightSelectionRAFKey]) {
+              return;
+            }
+
+            window[tightSelectionRAFKey] = requestAnimationFrame(() => {
+              window[tightSelectionRAFKey] = 0;
+              drawTightSelectionOverlay();
+            });
+          }
+
+          window.__leafletTightSelectionEnabled = tightSelectionEnabled;
+          window.__leafletUpdateTightSelectionOverlay = scheduleTightSelectionOverlayUpdate;
+          window.__leafletClearTightSelectionOverlay = clearTightSelectionOverlay;
+
+          if (!tightSelectionEnabled) {
+            teardownTightSelectionOverlay();
+          } else {
+            scheduleTightSelectionOverlayUpdate();
+          }
+
           function updateSelectionCache() {
             const selection = window.getSelection();
             if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+              if (window.__leafletClearTightSelectionOverlay) {
+                window.__leafletClearTightSelectionOverlay();
+              }
               return;
             }
 
@@ -110,14 +393,44 @@ final class PreviewSelectionBridge: NSObject {
           }
 
           if (!window[installedFlag]) {
-            root.addEventListener('mousedown', clearCachedSelection, true);
+            root.addEventListener('mousedown', () => {
+              clearCachedSelection();
+              if (window.__leafletClearTightSelectionOverlay) {
+                window.__leafletClearTightSelectionOverlay();
+              }
+            }, true);
             document.addEventListener('selectionchange', updateSelectionCache);
             document.addEventListener('mouseup', updateSelectionCache);
             document.addEventListener('keyup', updateSelectionCache);
             window[installedFlag] = true;
           }
 
+          if (!window[tightSelectionListenerFlag]) {
+            document.addEventListener('selectionchange', () => {
+              if (window.__leafletUpdateTightSelectionOverlay) {
+                window.__leafletUpdateTightSelectionOverlay();
+              }
+            });
+            document.addEventListener('mouseup', () => {
+              if (window.__leafletUpdateTightSelectionOverlay) {
+                window.__leafletUpdateTightSelectionOverlay();
+              }
+            });
+            document.addEventListener('keyup', () => {
+              if (window.__leafletUpdateTightSelectionOverlay) {
+                window.__leafletUpdateTightSelectionOverlay();
+              }
+            });
+            window.addEventListener('resize', () => {
+              if (window.__leafletUpdateTightSelectionOverlay) {
+                window.__leafletUpdateTightSelectionOverlay();
+              }
+            });
+            window[tightSelectionListenerFlag] = true;
+          }
+
           updateSelectionCache();
+          scheduleTightSelectionOverlayUpdate();
           return true;
         })();
         """

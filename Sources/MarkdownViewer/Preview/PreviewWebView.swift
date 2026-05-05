@@ -4,6 +4,7 @@ import WebKit
 struct PreviewWebView: NSViewRepresentable {
     let renderedDocument: RenderedDocument
     let selectionBridge: PreviewSelectionBridge
+    let selectionOverlayEnabled: Bool
     let linkHandler: (URL) -> Void
     let selectionChangeHandler: () -> Void
     let documentDidFinishLoading: () -> Void
@@ -31,9 +32,11 @@ struct PreviewWebView: NSViewRepresentable {
     }
 
     func updateNSView(_ webView: WKWebView, context: Context) {
+        context.coordinator.selectionOverlayEnabled = selectionOverlayEnabled
         selectionBridge.webView = webView
         (webView as? SelectionAwareWebView)?.selectionChangeHandler = selectionChangeHandler
         let signature = [
+            renderedDocument.displayMode.rawValue,
             renderedDocument.html,
             renderedDocument.baseURL?.path ?? ""
         ].joined(separator: "::")
@@ -45,6 +48,7 @@ struct PreviewWebView: NSViewRepresentable {
 
     final class Coordinator: NSObject, WKNavigationDelegate {
         var lastSignature = ""
+        var selectionOverlayEnabled = false
         private let linkHandler: (URL) -> Void
         private let selectionBridge: PreviewSelectionBridge
         private let documentDidFinishLoading: () -> Void
@@ -84,7 +88,9 @@ struct PreviewWebView: NSViewRepresentable {
         func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
             selectionBridge.webView = webView
             Task { @MainActor in
-                await selectionBridge.installSelectionEnhancements()
+                await selectionBridge.installSelectionEnhancements(
+                    selectionOverlayEnabled: selectionOverlayEnabled
+                )
                 documentDidFinishLoading()
             }
         }

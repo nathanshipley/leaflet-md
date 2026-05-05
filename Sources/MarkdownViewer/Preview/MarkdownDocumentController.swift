@@ -62,6 +62,10 @@ final class MarkdownDocumentController: ObservableObject {
         canSaveMarkdownCopy
     }
 
+    var textKitRenderingPreferences: PreviewRenderingPreferences {
+        renderingPreferences
+    }
+
     var isReusableBlankDocument: Bool {
         fileURL == nil && documentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
@@ -193,7 +197,7 @@ final class MarkdownDocumentController: ObservableObject {
         let effectiveTableMode = tableMode ?? preferredSlackTableMode
 
         switch displayMode {
-        case .preview:
+        case .preview, .pdf, .overlay, .textKit:
             await copyPreviewForSlack(tableMode: effectiveTableMode)
         case .code:
             await copyCodeForSlack(tableMode: effectiveTableMode)
@@ -202,7 +206,7 @@ final class MarkdownDocumentController: ObservableObject {
 
     func copySystemSelection() async -> Bool {
         switch displayMode {
-        case .preview:
+        case .preview, .overlay:
             // In Preview, Cmd+C means "I want to paste this somewhere
             // useful" - which for a Markdown reader almost always means
             // Slack. Route through the same pipeline as the Copy for Slack
@@ -215,6 +219,8 @@ final class MarkdownDocumentController: ObservableObject {
                 return true
             }
             return previewSelectionBridge.copyNativeSelection()
+        case .pdf, .textKit:
+            return false
         case .code:
             guard let selectedSource = await previewSelectionBridge.selectedSourceText() else {
                 return false
@@ -383,7 +389,7 @@ final class MarkdownDocumentController: ObservableObject {
     }
 
     func beginPreviewSelectionCapture() {
-        guard displayMode == .preview else {
+        guard displayMode == .preview || displayMode == .overlay else {
             return
         }
 
@@ -531,6 +537,12 @@ final class MarkdownDocumentController: ObservableObject {
         resetAnchor: Bool,
         backwards: Bool
     ) {
+        guard displayMode != .textKit, displayMode != .pdf else {
+            findMatchCount = 0
+            findResultText = "Find not wired for \(displayMode.title) POC"
+            return
+        }
+
         let query = findQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         findTask?.cancel()
 
