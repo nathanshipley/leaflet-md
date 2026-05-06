@@ -1,8 +1,5 @@
 enum MarkdownDisplayMode: String, CaseIterable, Identifiable {
     case preview
-    case pdf
-    case overlay
-    case textKit
     case code
 
     var id: String { rawValue }
@@ -11,12 +8,6 @@ enum MarkdownDisplayMode: String, CaseIterable, Identifiable {
         switch self {
         case .preview:
             return "Preview"
-        case .pdf:
-            return "PDF"
-        case .overlay:
-            return "Overlay"
-        case .textKit:
-            return "TextKit"
         case .code:
             return "Code"
         }
@@ -24,9 +15,7 @@ enum MarkdownDisplayMode: String, CaseIterable, Identifiable {
 
     var containerClass: String {
         switch self {
-        case .preview, .pdf, .overlay:
-            return "preview-shell"
-        case .textKit:
+        case .preview:
             return "preview-shell"
         case .code:
             return "code-shell"
@@ -35,9 +24,7 @@ enum MarkdownDisplayMode: String, CaseIterable, Identifiable {
 
     var contentClass: String {
         switch self {
-        case .preview, .pdf, .overlay:
-            return "markdown-body"
-        case .textKit:
+        case .preview:
             return "markdown-body"
         case .code:
             return "source-pane"
@@ -46,9 +33,7 @@ enum MarkdownDisplayMode: String, CaseIterable, Identifiable {
 
     var contentTag: String {
         switch self {
-        case .preview, .pdf, .overlay:
-            return "article"
-        case .textKit:
+        case .preview:
             return "article"
         case .code:
             return "section"

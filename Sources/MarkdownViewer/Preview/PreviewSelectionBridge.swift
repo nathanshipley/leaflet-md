@@ -868,6 +868,31 @@ final class PreviewSelectionBridge: NSObject {
             return (value || '').replace(/\\s+/g, ' ').trim();
           }
 
+          function normalizeRenderedInlineWhitespace(container) {
+            const walker = document.createTreeWalker(
+              container,
+              NodeFilter.SHOW_TEXT,
+              {
+                acceptNode(node) {
+                  const parent = node.parentElement;
+                  if (!parent || parent.closest('pre')) {
+                    return NodeFilter.FILTER_REJECT;
+                  }
+                  return NodeFilter.FILTER_ACCEPT;
+                }
+              }
+            );
+
+            const textNodes = [];
+            while (walker.nextNode()) {
+              textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach((node) => {
+              node.nodeValue = (node.nodeValue || '').replace(/\\s+/g, ' ');
+            });
+          }
+
           function separatorText() {
             return '────────────────────';
           }
@@ -1224,6 +1249,7 @@ final class PreviewSelectionBridge: NSObject {
           }
 
           cleanup(selectionData.container);
+          normalizeRenderedInlineWhitespace(selectionData.container);
           const spaced = addSpacing(selectionData.container);
           return {
             plainText: (spaced.innerText || selectionData.text || '').trim(),
@@ -1466,7 +1492,7 @@ final class PreviewSelectionBridge: NSObject {
 
             children.forEach((child) => {
               if (child instanceof HTMLElement && child.tagName === 'P') {
-                appendInlineNodes(child.childNodes, ops);
+                appendInlineNodes(child.childNodes, ops, {}, { collapseWhitespace: true });
               } else {
                 appendInlineNode(child, ops);
               }
@@ -1521,7 +1547,7 @@ final class PreviewSelectionBridge: NSObject {
                 Array.from(node.childNodes).forEach((child) => appendBlock(child, ops));
                 return;
               case 'P':
-                appendInlineNodes(node.childNodes, ops);
+                appendInlineNodes(node.childNodes, ops, {}, { collapseWhitespace: true });
                 return;
               default:
                 appendInlineNode(node, ops);
@@ -1579,6 +1605,31 @@ final class PreviewSelectionBridge: NSObject {
 
           function normalizeText(value) {
             return (value || '').replace(/\\s+/g, ' ').trim();
+          }
+
+          function normalizeRenderedInlineWhitespace(container) {
+            const walker = document.createTreeWalker(
+              container,
+              NodeFilter.SHOW_TEXT,
+              {
+                acceptNode(node) {
+                  const parent = node.parentElement;
+                  if (!parent || parent.closest('pre')) {
+                    return NodeFilter.FILTER_REJECT;
+                  }
+                  return NodeFilter.FILTER_ACCEPT;
+                }
+              }
+            );
+
+            const textNodes = [];
+            while (walker.nextNode()) {
+              textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach((node) => {
+              node.nodeValue = (node.nodeValue || '').replace(/\\s+/g, ' ');
+            });
           }
 
           // Mirror the Swift exporter:
@@ -1870,6 +1921,7 @@ final class PreviewSelectionBridge: NSObject {
           }
 
           cleanup(container);
+          normalizeRenderedInlineWhitespace(container);
           return addSpacing(container);
         })();
         """
@@ -1915,6 +1967,31 @@ final class PreviewSelectionBridge: NSObject {
 
           function normalizeText(value) {
             return (value || '').replace(/\\s+/g, ' ').trim();
+          }
+
+          function normalizeRenderedInlineWhitespace(container) {
+            const walker = document.createTreeWalker(
+              container,
+              NodeFilter.SHOW_TEXT,
+              {
+                acceptNode(node) {
+                  const parent = node.parentElement;
+                  if (!parent || parent.closest('pre')) {
+                    return NodeFilter.FILTER_REJECT;
+                  }
+                  return NodeFilter.FILTER_ACCEPT;
+                }
+              }
+            );
+
+            const textNodes = [];
+            while (walker.nextNode()) {
+              textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach((node) => {
+              node.nodeValue = (node.nodeValue || '').replace(/\\s+/g, ' ');
+            });
           }
 
           // Mirror the Swift exporter:
@@ -2172,6 +2249,7 @@ final class PreviewSelectionBridge: NSObject {
           });
 
           cleanup(container);
+          normalizeRenderedInlineWhitespace(container);
           return addSpacing(container);
         })();
         """

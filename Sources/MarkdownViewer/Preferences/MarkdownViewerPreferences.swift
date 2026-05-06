@@ -72,7 +72,7 @@ public final class MarkdownViewerPreferences: ObservableObject {
         marginPreset = PreviewMarginPreset(rawValue: defaults.string(forKey: Keys.marginPreset) ?? "") ?? .normal
         fontPreset = PreviewFontPreset(rawValue: defaults.string(forKey: Keys.fontPreset) ?? "") ?? .github
         allowWideContent = defaults.object(forKey: Keys.allowWideContent) as? Bool ?? false
-        wrapCodeViewLines = defaults.object(forKey: Keys.wrapCodeViewLines) as? Bool ?? false
+        wrapCodeViewLines = defaults.object(forKey: Keys.wrapCodeViewLines) as? Bool ?? true
         slackTableMode = Self.resolveSlackTableMode(defaults: defaults)
         warnOnQuit = defaults.object(forKey: Keys.warnOnQuit) as? Bool ?? true
     }

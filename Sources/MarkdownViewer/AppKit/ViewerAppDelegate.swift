@@ -90,6 +90,20 @@ public final class ViewerAppDelegate: NSObject, NSApplicationDelegate, NSMenuDel
 
     // MARK: - Menu Actions
 
+    @objc func showAboutPanel(_ sender: Any?) {
+        let credits = NSAttributedString(
+            string: "by Nathan Shipley",
+            attributes: [
+                .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
+                .foregroundColor: NSColor.secondaryLabelColor
+            ]
+        )
+
+        NSApp.orderFrontStandardAboutPanel(options: [
+            .credits: credits
+        ])
+    }
+
     @objc func createNewTab(_ sender: Any?) {
         guard let keyWindow = NSApp.keyWindow ?? NSApp.mainWindow else {
             NSDocumentController.shared.newDocument(sender)
@@ -404,7 +418,9 @@ public final class ViewerAppDelegate: NSObject, NSApplicationDelegate, NSMenuDel
     private func buildAppMenu() -> NSMenuItem {
         let appMenu = NSMenu()
 
-        appMenu.addItem(withTitle: "About \(appName)", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        let aboutItem = NSMenuItem(title: "About \(appName)", action: #selector(showAboutPanel(_:)), keyEquivalent: "")
+        aboutItem.target = self
+        appMenu.addItem(aboutItem)
         appMenu.addItem(.separator())
 
         let settingsItem = NSMenuItem(title: "Settings…", action: #selector(showSettingsWindow(_:)), keyEquivalent: ",")

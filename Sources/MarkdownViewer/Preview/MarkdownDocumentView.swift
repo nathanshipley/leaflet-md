@@ -18,18 +18,11 @@ struct MarkdownDocumentView: View {
                 EmptyPreviewView {
                     controller.newDocumentFromClipboard()
                 }
-            } else if controller.displayMode == .pdf {
-                PDFPreviewView(renderedDocument: controller.renderedDocument)
-            } else if controller.displayMode == .textKit {
-                TextKitPreviewView(
-                    markdown: controller.documentText,
-                    preferences: controller.textKitRenderingPreferences
-                )
             } else {
                 PreviewWebView(
                     renderedDocument: controller.renderedDocument,
                     selectionBridge: controller.previewSelectionBridge,
-                    selectionOverlayEnabled: controller.displayMode == .overlay,
+                    selectionOverlayEnabled: controller.displayMode == .preview,
                     linkHandler: controller.handleLinkActivation,
                     selectionChangeHandler: controller.beginPreviewSelectionCapture,
                     documentDidFinishLoading: controller.handleDocumentDidFinishLoading
@@ -182,7 +175,7 @@ struct MarkdownDocumentView: View {
 
     private var modePicker: some View {
         DisplayModeToggle(selection: $controller.displayMode)
-        .frame(width: 330)
+        .frame(width: 170)
     }
 }
 

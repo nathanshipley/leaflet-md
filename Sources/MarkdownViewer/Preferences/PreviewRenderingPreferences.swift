@@ -10,7 +10,7 @@ struct PreviewRenderingPreferences: Equatable, Sendable {
         marginPreset: .normal,
         fontPreset: .github,
         allowWideContent: false,
-        wrapCodeViewLines: false
+        wrapCodeViewLines: true
     )
 
     var cssOverrides: String {

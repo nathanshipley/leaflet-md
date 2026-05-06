@@ -41,29 +41,6 @@ struct MarkdownRenderer {
                 context: context,
                 preferences: preferences
             )
-        case .pdf:
-            return renderPreview(
-                markdown: markdown,
-                displayMode: .pdf,
-                context: context,
-                preferences: preferences,
-                note: "PDF proof-of-concept renderer is active."
-            )
-        case .overlay:
-            return renderPreview(
-                markdown: markdown,
-                displayMode: .overlay,
-                context: context,
-                preferences: preferences,
-                note: "Tight selection overlay proof-of-concept renderer is active."
-            )
-        case .textKit:
-            return .placeholder(
-                title: context.title,
-                displayMode: .textKit,
-                note: "TextKit proof-of-concept renderer is active.",
-                renderingPreferences: preferences
-            )
         case .code:
             return renderCode(markdown: markdown, context: context, preferences: preferences)
         }

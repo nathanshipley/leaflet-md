@@ -46,7 +46,17 @@ body {
 }
 
 .markdown-body pre {
-  overflow: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.markdown-body pre code,
+.markdown-body pre tt {
+  white-space: inherit;
+  word-break: inherit;
+  overflow-wrap: inherit;
 }
 
 .markdown-body table {
