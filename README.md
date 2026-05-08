@@ -27,14 +27,6 @@ It is intentionally **not** a Markdown editor. Think TextEdit or Preview for Mar
   </tr>
 </table>
 
-To open the beta:
-
-1. Download and double-click `Leaflet-v0.1.0-beta.10-macOS-universal.dmg`.
-2. Drag `Leaflet.app` into the Applications shortcut.
-3. Eject the disk image and open Leaflet from Applications.
-
-The build is signed with a Developer ID certificate and notarized by Apple, so Gatekeeper should open it without any warning. App Store packaging is still deferred.
-
 ## What Leaflet does
 
 - Opens Markdown and plain text files in native Mac document windows
@@ -49,18 +41,6 @@ The signature feature is **Copy for Slack**. It writes Slack's rich clipboard fo
 
 - **Pasting LLM responses into Slack.** Copy a ChatGPT or Claude reply, drop it into a Leaflet window with `New from Clipboard`, and `Copy for Slack` — bullets, code blocks, headings, and tables come through cleanly.
 - **Bridging Workflowy → Slack.** Workflowy's own copy-for-Slack drops formatting whenever a list item also contains styled text. Pasting through Leaflet preserves both the list structure and the inline formatting in one go.
-
-### A note on default-app behavior
-
-Because no system app on macOS claims `.md` by default, Leaflet may become the default Markdown viewer the first time you install it — that's macOS picking the only registered handler, not Leaflet asking for it. To change it: in Finder, select any `.md` file → File → Get Info → Open With → choose another app → **Change All**.
-
-## What To Test (if you have a sec!)
-
-- Open a Markdown file and switch between Preview and Code
-- Try Find with `Command-F` and `Command-G`
-- Try New from Clipboard
-- Try Copy for Slack into Slack desktop or Slack in Chrome
-- If anything looks weird, send a screenshot or the Markdown that broke
 
 ## Known limitations
 
