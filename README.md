@@ -13,13 +13,13 @@ It is intentionally **not** a Markdown editor. Think TextEdit or Preview for Mar
 <table>
   <tr>
     <td width="64">
-      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.10/Leaflet-v0.1.0-beta.10-macOS-universal.dmg">
+      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.11/Leaflet-v0.1.0-beta.11-macOS-universal.dmg">
         <img src="icon/IconCompose_02-macOS-Default-1024x1024@1x.png" alt="Leaflet app icon" width="52">
       </a>
     </td>
     <td>
-      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.10/Leaflet-v0.1.0-beta.10-macOS-universal.dmg">
-        <strong>Download Leaflet v0.1.0-beta.10 for macOS</strong>
+      <a href="https://github.com/nathanshipley/leaflet-md/releases/download/v0.1.0-beta.11/Leaflet-v0.1.0-beta.11-macOS-universal.dmg">
+        <strong>Download Leaflet v0.1.0-beta.11 for macOS</strong>
       </a>
       <br>
       Apple Silicon and Intel Macs, macOS 13+, signed and notarized.
@@ -36,6 +36,10 @@ It is intentionally **not** a Markdown editor. Think TextEdit or Preview for Mar
 - Copies rich Markdown into Slack with nested lists, code blocks, tables, and inline formatting intact
 
 The signature feature is **Copy for Slack**. It writes Slack's rich clipboard format so pastes can preserve structure in both Slack desktop and Slack in Chrome.
+
+<p align="center">
+  <img src="screenshots/App/Hero/Leaflet_SlackPaste_Smaller.png" alt="Leaflet copying Markdown into Slack" width="100%">
+</p>
 
 ### Two ways people are using it
 
